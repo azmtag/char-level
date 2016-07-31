@@ -1,2 +1,2 @@
 # char-level
-Character-level models.
+Character-level neural models.
