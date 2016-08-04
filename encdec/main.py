@@ -17,8 +17,8 @@ import keras.backend.tensorflow_backend as KTF
 import logging as lg
 
 lg.basicConfig(filename='all_results.log',
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
-                    level=lg.DEBUG)
+               format='[%(asctime)s] %(name)s | %(levelname)s - %(message)s',
+               level=lg.DEBUG)
 
 # for reproducibility
 np.random.seed(123)
@@ -38,6 +38,7 @@ def get_session(gpu_fraction=0.2):
     else:
         return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
+
 KTF.set_session(get_session())
 
 # set parameters:
@@ -51,22 +52,16 @@ model_name_path = 'params/crepe_model.json'
 model_weights_path = 'params/crepe_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-
 maxlen = 1014
 
-# Model params
 # Filters for conv layers
-nb_filter = 256
+nb_filter = 512
 
 # Number of units in the dense layer
 dense_outputs = 1024
 
 # Conv layer kernel size
-filter_kernels = [7, 7, 3, 3, 3, 3]
-
-# Number of units in the final output layer. Number of classes.
-# A 1 dim regression, so cat == 1
-cat_output = 1
+filter_kernels = [7, 7, 3, 3]
 
 # Compile/fit params
 batch_size = 80
@@ -80,16 +75,13 @@ lg.info('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
 
 lg.info(str(vocab))
-
 test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 lg.info('Build model...')
-
-model = t2v.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter, cat_output)
+model = t2v.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter)
 
 lg.info('Fit model...')
 initial = datetime.datetime.now()
-
 
 for e in range(nb_epoch):
 
@@ -108,7 +100,7 @@ for e in range(nb_epoch):
                                                      vocab_size, check, maxlen,
                                                      batch_size=batch_size)
 
-    accuracy = 0.0
+    # accuracy = 0.0
     loss = 0.0
     step = 1
     start = datetime.datetime.now()
@@ -116,28 +108,31 @@ for e in range(nb_epoch):
 
     for x_train, y_train in batches:
 
-        f = model.train_on_batch(x_train, y_train)
-        loss += f[0]
+        # todo: synonym-replaced texts dataset needed
+        f = model.train_on_batch(x_train, x_train)
+        loss += f
         loss_avg = loss / step
-        accuracy += f[1]
-        accuracy_avg = accuracy / step
+        # accuracy += f[1]
+        # accuracy_avg = accuracy / step
 
         if step % 100 == 0:
             lg.info('  Step: {}'.format(step))
-            lg.info('\tLoss: {}. Accuracy: {}'.format(loss_avg, accuracy_avg))
+            # lg.info('\tLoss: {}. Accuracy: {}'.format(loss_avg, accuracy_avg))
+            lg.info('\tLoss: {}.'.format(loss_avg))
         step += 1
 
-    test_accuracy = 0.0
+    # test_accuracy = 0.0
     test_loss = 0.0
     test_step = 1
+    test_loss_avg = 0.0
 
     for x_test_batch, y_test_batch in test_batches:
-
-        f_ev = model.test_on_batch(x_test_batch, y_test_batch)
-        test_loss += f_ev[0]
+        # todo: synonym-replaced texts dataset needed
+        f_ev = model.test_on_batch(x_test_batch, x_test_batch)
+        test_loss += f_ev  # [0]
         test_loss_avg = test_loss / test_step
-        test_accuracy += f_ev[1]
-        test_accuracy_avg = test_accuracy / test_step
+        # test_accuracy += f_ev[1]
+        # test_accuracy_avg = test_accuracy / test_step
         test_step += 1
 
     stop = datetime.datetime.now()
@@ -152,4 +147,4 @@ if save:
     with open(model_name_path, 'w') as f:
         json.dump(json_string, f, ensure_ascii=False)
 
-    model.save_weights(model_weights_path,overwrite=True)
+    model.save_weights(model_weights_path, overwrite=True)
