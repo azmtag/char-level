@@ -13,7 +13,6 @@ UNKNSYM = u'ξ'
 
 
 def load_ag_data():
-
     train = pd.read_csv('data/ag_news_csv/train.csv', header=None)
     train = train.dropna()
 
@@ -65,7 +64,7 @@ def load_restoclub_data(env_folder):
         x_train = np.array(x_train)
 
         y_train = train[0]
-        
+
         print(x_train.shape)
         print(y_train.shape)
 
@@ -74,7 +73,7 @@ def load_restoclub_data(env_folder):
         x_test = np.array(x_test)
 
         y_test = test[0]
-        
+
         return (x_train, y_train), (x_test, y_test)
     except IOError as e:
         print (e)
@@ -114,7 +113,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
         for c in chars:
             if counter >= 1014:
                 """
-                    lettin numbers from Crepe papers live
+                    Lettin numbers from Crepe papers live
                 """
                 break
             else:
@@ -135,12 +134,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
 
 
 def shuffle_matrix(x, y):
-    #print(x.shape)
-    #print(y.shape)
-    #print(np.matrix(y).T.shape)
-    #print(np.matrix(x).T.shape)
     stacked = np.hstack((np.matrix(x).T, np.matrix(y).T))
-    #print(stacked.shape)
     np.random.shuffle(stacked)
     xi = np.array(stacked[:, 0]).flatten()
     yi = np.array(stacked[:, 1:])
@@ -155,9 +149,7 @@ def create_vocab_set():
     """
 
     alphabet = \
-         (list(u"qwertyuiopasdfghjklzxcvbnmёйцукенгшщзхъфывапролджэячсмитьбю«»…–“”№—") +
-         #(list(u"«»…–“”№—") +          
-         # (list(u"qwertyuiopasdfghjklzxcvbnmёйцукенгшщзхъфывапролджэячсмитьбю") +
+        (list(u"qwertyuiopasdfghjklzxcvbnmёйцукенгшщзхъфывапролджэячсмитьбю«»…–“”№—") +
          list(string.digits) +
          list(string.punctuation) +
          ['\n', ' ', UNKNSYM])

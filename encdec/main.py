@@ -8,7 +8,7 @@ from __future__ import print_function
 from __future__ import division
 import os
 import json
-import t2v
+import tweet2vec
 import datetime
 import numpy as np
 import data_helpers
@@ -78,7 +78,7 @@ lg.info(str(vocab))
 test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 lg.info('Build model...')
-model = t2v.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter)
+model = tweet2vec.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter)
 
 lg.info('Fit model...')
 initial = datetime.datetime.now()
