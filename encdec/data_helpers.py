@@ -33,10 +33,10 @@ def load_ag_data():
     return (x_train, y_train), (x_test, y_test)
 
 
-def prepare_restoclub_data(splitting_ratio_train):
+def prepare_restoclub_data(splitting_ratio_train, env_folder):
     json_all_data_list = []
 
-    with open('data/restoclub/restoclub.reviews.json', 'r') as data_file:
+    with open(env_folder + '/restoclub/restoclub.reviews.json', 'r') as data_file:
         json_all_data_list = json.load(data_file, encoding='UTF-8')
 
     def data_adapter(js_obj):
@@ -52,13 +52,13 @@ def prepare_restoclub_data(splitting_ratio_train):
 
     test_ds = DataFrame(flat_data[splitting:])
 
-    train_ds.to_csv('data/restoclub/train.csv', index=False, header=False, sep=",", quotechar='"')
-    test_ds.to_csv('data/restoclub/test.csv', index=False, header=False, sep=",", quotechar='"')
+    train_ds.to_csv(env_folder + '/restoclub/train.csv', index=False, header=False, sep=",", quotechar='"')
+    test_ds.to_csv(env_folder + '/restoclub/test.csv', index=False, header=False, sep=",", quotechar='"')
 
 
-def load_restoclub_data():
+def load_restoclub_data(env_folder):
     try:
-        train = pd.read_csv('data/restoclub/train.csv', header=None)
+        train = pd.read_csv(env_folder + '/restoclub/train.csv', header=None)
         train = train.dropna()
 
         x_train = train[1]
@@ -69,7 +69,7 @@ def load_restoclub_data():
         print(x_train.shape)
         print(y_train.shape)
 
-        test = pd.read_csv('data/restoclub/test.csv', header=None)
+        test = pd.read_csv(env_folder + '/restoclub/test.csv', header=None)
         x_test = test[1]
         x_test = np.array(x_test)
 
@@ -78,8 +78,8 @@ def load_restoclub_data():
         return (x_train, y_train), (x_test, y_test)
     except IOError as e:
         print (e)
-        prepare_restoclub_data(0.95)
-        load_restoclub_data()
+        prepare_restoclub_data(0.95, env_folder)
+        load_restoclub_data(env_folder)
 
 
 def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
@@ -181,4 +181,4 @@ def create_vocab_set():
 
 if __name__ == '__main__':
     # loading test
-    load_restoclub_data()
+    load_restoclub_data("data_test")

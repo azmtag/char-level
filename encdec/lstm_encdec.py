@@ -25,9 +25,12 @@ def model(maxlen, vocab_size):
     """
         Simple autoencoder for sequences
     """
+
     input_dim = vocab_size
     latent_dim = 500
     timesteps = maxlen
+
+    lg.info("input_dim " + str(vocab_size) + " latent_dim " + str(latent_dim) + " timesteps " + str(timesteps))
 
     inputs = Input(shape=(timesteps, input_dim))
     encoded = LSTM(output_dim=latent_dim)(inputs)
@@ -40,7 +43,7 @@ def model(maxlen, vocab_size):
 
     lg.info("Model constructed, compiling now...")
 
-    sequence_autoencoder.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+    sequence_autoencoder.compile(loss='categorical_crossentropy', optimizer=adam)
 
     return sequence_autoencoder
 
@@ -80,17 +83,15 @@ nb_epoch = 10
 
 lg.info('Loading data...')
 # Expect x to be a list of sentences. Y to be a one-hot encoding of the categories.
-(xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data()
+(xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data("data_test")
 
 lg.info('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
 
-lg.info(str(vocab))
-
+lg.info('Vocabulary: ' + str(vocab))
 test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 lg.info('Build model...')
-
 dumb_model = model(maxlen, vocab_size)
 
 lg.info('Fit model...')
@@ -119,30 +120,31 @@ for e in range(nb_epoch):
     start = datetime.datetime.now()
     lg.info('Epoch: {}'.format(e))
 
-    for x_train, y_train in batches:
+    for x_train, _ in batches:
 
-        f = dumb_model.train_on_batch(x_train, y_train)
-        loss += f[0]
+        f = dumb_model.train_on_batch(x_train, x_train)
+        loss += f
         loss_avg = loss / step
-        accuracy += f[1]
-        accuracy_avg = accuracy / step
+        # accuracy += f[1]
+        # accuracy_avg = accuracy / step
 
         if step % 100 == 0:
             lg.info('  Step: {}'.format(step))
-            lg.info('\tLoss: {}. Accuracy: {}'.format(loss_avg, accuracy_avg))
+            # lg.info('\tLoss: {}. Accuracy: {}'.format(loss_avg, accuracy_avg))
+            lg.info('\tLoss: {}.'.format(loss_avg))
         step += 1
 
-    test_accuracy = 0.0
+    # test_accuracy = 0.0
     test_loss = 0.0
     test_loss_avg = 0.0
     test_step = 1
 
     for x_test_batch, y_test_batch in test_batches:
-        f_ev = dumb_model.test_on_batch(x_test_batch, y_test_batch)
-        test_loss += f_ev[0]
+        f_ev = dumb_model.test_on_batch(x_test_batch, x_test_batch)
+        test_loss += f_ev
         test_loss_avg = test_loss / test_step
-        test_accuracy += f_ev[1]
-        test_accuracy_avg = test_accuracy / test_step
+        # test_accuracy += f_ev[1]
+        # test_accuracy_avg = test_accuracy / test_step
         test_step += 1
 
     stop = datetime.datetime.now()
