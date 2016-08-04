@@ -67,8 +67,8 @@ filter_kernels = [7, 7, 3, 3]
 batch_size = 80
 nb_epoch = 10
 
-# LSTM latent vector size
-latent_dim = 200
+# LSTM latent vector size, enc_N from the paper
+latent_dim = 2526
 
 lg.info('Loading data...')
 # Expect x to be a list of sentences. Y to be a one-hot encoding of the categories.

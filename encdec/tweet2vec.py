@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 
-from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Input, LSTM
 from keras.layers.convolutional import Convolution1D, MaxPooling1D
 from keras.layers.core import RepeatVector
@@ -8,14 +7,14 @@ from keras.models import Model
 from keras.optimizers import Adam
 
 
-def model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter, latent_dim_lstm):
+def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc, latent_dim_lstm_dec):
     # Define what the input shape looks like
-    inputs = Input(shape=(maxlen, vocab_size), name='input', dtype='float32')
+    inputs = Input(shape=(timesteps, vocab_size), name='input', dtype='float32')
 
     # All the convolutional layers...
     conv = Convolution1D(nb_filter=nb_filter, filter_length=filter_kernels[0],
                          border_mode='valid', activation='relu',
-                         input_shape=(maxlen, vocab_size))(inputs)
+                         input_shape=(timesteps, vocab_size))(inputs)
     conv = MaxPooling1D(pool_length=3)(conv)
 
     conv1 = Convolution1D(nb_filter=nb_filter, filter_length=filter_kernels[1],
@@ -30,11 +29,9 @@ def model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter, latent_d
 
     # conv4 = Convolution1D(nb_filter=nb_filter, filter_length=filter_kernels[4],
     #                       border_mode='valid', activation='relu')(conv3)
-    #
     # conv5 = Convolution1D(nb_filter=nb_filter, filter_length=filter_kernels[5],
     #                       border_mode='valid', activation='relu')(conv4)
     # conv5 = BatchNormalization()(conv5)
-
     # conv5 = MaxPooling1D(pool_length=3)(conv5)
     # conv5 = Flatten()(conv5)
 
@@ -42,13 +39,22 @@ def model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter, latent_d
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(conv5))
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(z))
 
-    encoded = LSTM(latent_dim_lstm)(conv3)
-    decoded = RepeatVector(maxlen)(encoded)
-    decoded = LSTM(maxlen, return_sequences=True)(decoded)
+    encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)  # returns a single vector, which is an embedding
+    encoded_copied = RepeatVector(n=timesteps)(encoded)
+
+    predecoded = LSTM(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+    decoded = LSTM(output_dim=vocab_size,
+                   return_sequences=True,
+                   activation='softmax')(predecoded)
 
     sequence_autoencoder = Model(inputs, decoded)
 
     adam = Adam()
     sequence_autoencoder.compile(loss='categorical_crossentropy', optimizer=adam)
 
+    """
+    memo: How to get encoder only? Simply do after training:
+        encoder = Model(input=inputs, output=encoded)
+        X_encoded = encoder.predict(X)
+    """
     return sequence_autoencoder
