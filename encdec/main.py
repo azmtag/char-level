@@ -67,9 +67,12 @@ filter_kernels = [7, 7, 3, 3]
 batch_size = 80
 nb_epoch = 10
 
+# LSTM latent vector size
+latent_dim = 200
+
 lg.info('Loading data...')
 # Expect x to be a list of sentences. Y to be a one-hot encoding of the categories.
-(xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data()
+(xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data("data_test")
 
 lg.info('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
@@ -78,7 +81,7 @@ lg.info(str(vocab))
 test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 lg.info('Build model...')
-model = tweet2vec.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter)
+model = tweet2vec.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter, latent_dim)
 
 lg.info('Fit model...')
 initial = datetime.datetime.now()
