@@ -1,14 +1,14 @@
 # -*- coding:utf-8 -*-
 
-"""
-    Run on GPU: THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 python main.py
-"""
-
 from __future__ import print_function
 from __future__ import division
+
+from keras.layers import Input, LSTM
+from keras.layers.core import RepeatVector
+from keras.models import Model
+from keras.optimizers import Adam
 import os
 import json
-import t2v
 import datetime
 import numpy as np
 import data_helpers
@@ -17,11 +17,32 @@ import keras.backend.tensorflow_backend as KTF
 import logging as lg
 
 lg.basicConfig(filename='all_results.log',
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
-                    level=lg.DEBUG)
+               format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+               level=lg.DEBUG)
 
-# for reproducibility
-np.random.seed(123)
+
+def model(maxlen, vocab_size):
+    """
+        Simple autoencoder for sequences
+    """
+    input_dim = vocab_size
+    latent_dim = 500
+    timesteps = maxlen
+
+    inputs = Input(shape=(timesteps, input_dim))
+    encoded = LSTM(output_dim=latent_dim)(inputs)
+
+    decoded = RepeatVector(timesteps)(encoded)
+    decoded = LSTM(input_dim, return_sequences=True)(decoded)
+
+    sequence_autoencoder = Model(inputs, decoded)
+    adam = Adam()
+
+    lg.info("Model constructed, compiling now...")
+
+    sequence_autoencoder.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+
+    return sequence_autoencoder
 
 
 def get_session(gpu_fraction=0.2):
@@ -33,40 +54,25 @@ def get_session(gpu_fraction=0.2):
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction)
 
     if num_threads:
-        return tf.Session(config=tf.ConfigProto(
-            gpu_options=gpu_options, intra_op_parallelism_threads=num_threads))
+        return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, intra_op_parallelism_threads=num_threads))
     else:
         return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
+
+# for reproducibility
+np.random.seed(123)
 KTF.set_session(get_session())
 
 # set parameters:
-
 subset = None
 
 # Whether to save model parameters
-
 save = True
 model_name_path = 'params/crepe_model.json'
 model_weights_path = 'params/crepe_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-
 maxlen = 1014
-
-# Model params
-# Filters for conv layers
-nb_filter = 256
-
-# Number of units in the dense layer
-dense_outputs = 1024
-
-# Conv layer kernel size
-filter_kernels = [7, 7, 3, 3, 3, 3]
-
-# Number of units in the final output layer. Number of classes.
-# A 1 dim regression, so cat == 1
-cat_output = 1
 
 # Compile/fit params
 batch_size = 80
@@ -85,11 +91,10 @@ test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 lg.info('Build model...')
 
-model = t2v.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter, cat_output)
+dumb_model = model(maxlen, vocab_size)
 
 lg.info('Fit model...')
 initial = datetime.datetime.now()
-
 
 for e in range(nb_epoch):
 
@@ -116,7 +121,7 @@ for e in range(nb_epoch):
 
     for x_train, y_train in batches:
 
-        f = model.train_on_batch(x_train, y_train)
+        f = dumb_model.train_on_batch(x_train, y_train)
         loss += f[0]
         loss_avg = loss / step
         accuracy += f[1]
@@ -129,11 +134,11 @@ for e in range(nb_epoch):
 
     test_accuracy = 0.0
     test_loss = 0.0
+    test_loss_avg = 0.0
     test_step = 1
 
     for x_test_batch, y_test_batch in test_batches:
-
-        f_ev = model.test_on_batch(x_test_batch, y_test_batch)
+        f_ev = dumb_model.test_on_batch(x_test_batch, y_test_batch)
         test_loss += f_ev[0]
         test_loss_avg = test_loss / test_step
         test_accuracy += f_ev[1]
@@ -147,9 +152,9 @@ for e in range(nb_epoch):
 
 if save:
     lg.info('Saving model params...')
-    json_string = model.to_json()
+    json_string = dumb_model.to_json()
 
     with open(model_name_path, 'w') as f:
         json.dump(json_string, f, ensure_ascii=False)
 
-    model.save_weights(model_weights_path,overwrite=True)
+    dumb_model.save_weights(model_weights_path, overwrite=True)

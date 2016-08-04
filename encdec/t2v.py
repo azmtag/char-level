@@ -1,3 +1,5 @@
+# -*- coding:utf-8 -*-
+
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Input, LSTM
 from keras.layers.convolutional import Convolution1D, MaxPooling1D
