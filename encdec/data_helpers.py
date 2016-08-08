@@ -111,7 +111,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
             continue
 
         for c in chars:
-            if counter >= 1014:
+            if counter >= maxlen:
                 """
                     Lettin numbers from Crepe papers live
                 """
