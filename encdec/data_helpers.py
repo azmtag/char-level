@@ -81,14 +81,15 @@ def load_restoclub_data(env_folder):
         load_restoclub_data(env_folder)
 
 
-def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
+def mini_batch_generator(x, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
+
     for i in range(0, len(x), batch_size):
         x_sample = x[i:i + batch_size]
-        y_sample = y[i:i + batch_size]
+        # y_sample = x[i:i + batch_size]
 
         input_data = encode_data(x_sample, maxlen, vocab, vocab_size, vocab_check)
 
-        yield (input_data, y_sample)
+        yield (input_data, input_data)
 
 
 def encode_data(x, maxlen, vocab, vocab_size, check):
@@ -102,19 +103,18 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
     input_data = np.zeros((len(x), maxlen, vocab_size))
 
     for dix, sent in enumerate(x):
+
         counter = 0
         sent_array = np.zeros((maxlen, vocab_size))
+
         try:
-            chars = list(sent.lower().replace(' ', ''))
+            chars = list(sent.lower()) # .replace(' ', ''))
         except:
             print("ERROR " + str(dix) + " " + str(sent))
             continue
 
         for c in chars:
             if counter >= maxlen:
-                """
-                    Lettin numbers from Crepe papers live
-                """
                 break
             else:
                 char_array = np.zeros(vocab_size, dtype=np.int)
@@ -125,7 +125,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
                     # char not in set, we replace it with special symbol
                     ix = vocab[UNKNSYM]
                     char_array[ix] = 1
-                    # print("char not in set: " + str(c))
+
                 sent_array[counter, :] = char_array
                 counter += 1
         input_data[dix, :, :] = sent_array
@@ -134,6 +134,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
 
 
 def shuffle_matrix(x, y):
+
     stacked = np.hstack((np.matrix(x).T, np.matrix(y).T))
     np.random.shuffle(stacked)
     xi = np.array(stacked[:, 0]).flatten()
@@ -143,10 +144,6 @@ def shuffle_matrix(x, y):
 
 
 def create_vocab_set():
-    """
-        This alphabet is 69 chars vs. 70 reported in the paper since they include two
-        '-' characters. See https://github.com/zhangxiangxiao/Crepe#issues.
-    """
 
     alphabet = \
         (list(u"qwertyuiopasdfghjklzxcvbnmёйцукенгшщзхъфывапролджэячсмитьбю«»…–“”№—") +
@@ -154,12 +151,12 @@ def create_vocab_set():
          list(string.punctuation) +
          ['\n', ' ', UNKNSYM])
 
-    print(",".join(alphabet))
+    print("ALPHABET: " + ",".join(alphabet))
 
     vocab_size = len(alphabet) + 1
     check = set(alphabet)
 
-    print(check)
+    print("CHECK:" + ",".join(check))
 
     vocab = {}
     reverse_vocab = {}
