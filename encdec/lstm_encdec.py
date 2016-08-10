@@ -45,11 +45,10 @@ def model(maxlen, vocab_size, latent_dim=120):
     inputs = Input(shape=(timesteps, input_dim))
 
     lg.info("Input set. " + str(inputs))
-
-    lg.info("Setting encoder: out-dim " + str(latent_dim + 1 - 1))
+    lg.info("Setting encoder: out-dim " + str(latent_dim))
 
     # takes time :[
-    encoded = SimpleRNN(latent_dim, return_sequences=False, activation="relu")(inputs)
+    encoded = SimpleRNN(latent_dim, return_sequences=False, activation="tanh", dropout_U=0.2, dropout_W=0.1)(inputs)
     # encoded = LSTM(latent_dim, return_sequences=False)(inputs)
 
     lg.info("Encoder set: " + str(encoded))
@@ -57,11 +56,10 @@ def model(maxlen, vocab_size, latent_dim=120):
     repeated_embedding = RepeatVector(timesteps)(encoded)
 
     lg.info("Repeated embedding added: " + str(repeated_embedding))
-
     lg.info("Setting decoder")
 
     # takes time :[
-    decoded = SimpleRNN(input_dim, return_sequences=True, activation="relu")(repeated_embedding)
+    decoded = SimpleRNN(input_dim, return_sequences=True, activation="tanh")(repeated_embedding)
     # decoded = LSTM(input_dim, return_sequences=True)(repeated_embedding)
 
     lg.info("Decoder added: " + str(decoded))
@@ -109,12 +107,14 @@ model_name_path = 'params/lstm_dumb_model.json'
 model_weights_path = 'params/lstm_dumb_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 70
+maxlen = 10
 
 # Compile/fit params
-batch_size = 150
-test_batch_size = 2
-nb_epoch = 300
+batch_size = 5000
+test_batch_size = 100
+nb_epoch = 20
+
+representation_dim = 400
 
 lg.info('Loading data...')
 
@@ -128,7 +128,7 @@ lg.info('Vocabulary: ' + ",".join(vocab))
 # test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 lg.info('Build model...')
-dumb_model = model(maxlen, vocab_size)
+dumb_model = model(maxlen, vocab_size, representation_dim)
 
 lg.info('Fit model...')
 initial = datetime.datetime.now()
@@ -154,55 +154,49 @@ for e in range(nb_epoch):
     step = 1
     start = datetime.datetime.now()
 
-    lg.info('Epoch: {}'.format(e))
+    lg.info('EPOCH: {}'.format(e))
     lg.info('Training started')
 
     for x_train_batch, y_train_batch, _, _ in batches:
 
-        lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
+        # lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
 
         f = dumb_model.train_on_batch(x_train_batch, y_train_batch)
         loss += f
         loss_avg = loss / step
 
-        if step % 5 == 0:
-            lg.info('Train step: {}'.format(step))
-            lg.info('Train loss: {}'.format(loss_avg))
+        if step % 10 == 0:
+            lg.info('Train step: {}, loss: {}'.format(step, loss_avg))
         step += 1
 
     test_loss = 0.0
     test_loss_avg = 0.0
     test_step = 1
 
-    lg.info('Testing started')
+    lg.info('Testing started ----------------------------------')
 
     for x_test_batch, y_test_batch, x_text, y_text in test_batches:
-
-        lg.info('Testing on batch ' + str(x_test_batch.shape) + ' -> ' + str(y_test_batch.shape))
+        # lg.info('Testing on batch ' + str(x_test_batch.shape) + ' -> ' + str(y_test_batch.shape))
 
         f_ev = dumb_model.test_on_batch(x_test_batch, y_test_batch)
-
-        print(dumb_model.predict(x_test_batch))
 
         test_loss += f_ev
         test_loss_avg = test_loss / test_step
         test_step += 1
 
-        if test_step % 5 == 0:
-            lg.info('Test step: {}'.format(test_step))
-            lg.info('Test loss: {}'.format(test_loss_avg))
-            lg.info('Input: ' + x_text[0])
-            lg.info('Output: ' + y_text[0])
-            lg.info('Encoded input: ' + str(x_test_batch[0]))
-            predicted_seq = dumb_model.predict(np.array([x_test_batch[0]]), batch_size=1)
-            lg.info('Predicted: ' + predicted_seq)
-            lg.info('Predicted decoded: ' + data_helpers.decode_data(predicted_seq, reverse_vocab))
+        lg.info('Test step: {}, loss: {}'.format(test_step, test_loss_avg))
+        lg.info('Input:\t[' + x_text[0][:maxlen] + "]")
+        predicted_seq = dumb_model.predict(np.array([x_test_batch[0]]))
+        # lg.info('Predicted: ' + str(predicted_seq))
+        # lg.info('Predicted.shape: ' + str(predicted_seq.shape))
+        lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
+        lg.info('----------------------------------------------------------------')
 
     stop = datetime.datetime.now()
     e_elap = stop - start
     t_elap = stop - initial
 
-    lg.info('Epoch {}. Loss: {}.\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, e_elap, t_elap))
+    lg.info('Epoch {}. Loss: {}.\nEpoch time: {}. Total time: {}\n\n\n'.format(e, test_loss_avg, e_elap, t_elap))
 
 if save:
     lg.info('Saving model params...')

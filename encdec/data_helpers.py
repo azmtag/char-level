@@ -35,12 +35,12 @@ def load_ag_data():
 
 
 def load_embedding_data():
-    train = pd.read_csv('data/embedding/train.csv', header=None)
+    train = pd.read_csv('data/embedding/train.csv', header=None, encoding="utf-8")
     train = train.dropna()
     x_train = np.array(train[0])
     y_train = np.array(train[1])
 
-    test = pd.read_csv('data/embedding/test.csv', header=None)
+    test = pd.read_csv('data/embedding/test.csv', header=None, encoding="utf-8")
     test = test.dropna()
     x_test = np.array(test[0])
     y_test = np.array(test[1])
@@ -188,13 +188,8 @@ def create_vocab_set():
          list(string.punctuation) +
          ['\n', ' ', UNKNSYM])
 
-    print("ALPHABET: " + ",".join(alphabet))
-
     vocab_size = len(alphabet) + 1
     check = set(alphabet)
-
-    print("CHECK:" + ",".join(check))
-
     vocab = {}
     reverse_vocab = {}
 
@@ -207,6 +202,9 @@ def create_vocab_set():
 
 if __name__ == '__main__':
     # loading test
-    # prepare_embedding_data(0.95, "data")
-    vocab, reverse_vocab, vocab_size, check = create_vocab_set()
-    print(decode_data(encode_data(np.array([u"Аллоу, это прачечная?! dddℶ2134@##ℶ##fvs"]), 100, vocab, vocab_size, check), reverse_vocab))
+    prepare_embedding_data(0.7, "data")
+    # vocab, reverse_vocab, vocab_size, check = create_vocab_set()
+    # data = load_embedding_data()
+    # print
+    # print data[0][0][0]
+    # print (decode_data(encode_data(np.array([data[0][0][0]]), 70, vocab, vocab_size, check), reverse_vocab))
