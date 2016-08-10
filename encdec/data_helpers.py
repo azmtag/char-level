@@ -8,6 +8,7 @@ import string
 import pandas as pd
 from keras.utils.np_utils import to_categorical
 from pandas.core.frame import DataFrame
+from random import shuffle
 
 UNKNSYM = u'ξ'
 
@@ -30,6 +31,37 @@ def load_ag_data():
     y_test = to_categorical(y_test)
 
     return (x_train, y_train), (x_test, y_test)
+
+
+def load_embedding_data():
+
+    train = pd.read_csv('data/embedding/train.csv', header=None)
+    train = train.dropna()
+    x_train = np.array(train[0])
+    y_train = np.array(train[1])
+
+    test = pd.read_csv('data/embedding/test.csv', header=None)
+    test = test.dropna()
+    x_test = np.array(test[0])
+    y_test = np.array(test[1])
+
+    return (x_train, y_train), (x_test, y_test)
+
+
+def prepare_embedding_data(splitting_ratio_train, env_folder):
+    all_data_list = []
+
+    with open(env_folder + '/embedding/rawtexts.txt', mode='r') as data_file:
+        all_data_list = map(lambda x: [x.strip(), x.strip()], data_file.read().split("\n"))
+
+    shuffle(all_data_list)
+
+    splitting = int(math.floor(splitting_ratio_train * len(all_data_list)))
+    train_ds = DataFrame(all_data_list[:splitting])
+    test_ds = DataFrame(all_data_list[splitting:])
+
+    train_ds.to_csv(env_folder + '/embedding/train.csv', index=False, header=False, sep=",", quotechar='"')
+    test_ds.to_csv(env_folder + '/embedding/test.csv', index=False, header=False, sep=",", quotechar='"')
 
 
 def prepare_restoclub_data(splitting_ratio_train, env_folder):
@@ -82,7 +114,6 @@ def load_restoclub_data(env_folder):
 
 
 def mini_batch_generator(x, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
-
     for i in range(0, len(x), batch_size):
         x_sample = x[i:i + batch_size]
         # y_sample = x[i:i + batch_size]
@@ -108,7 +139,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
         sent_array = np.zeros((maxlen, vocab_size))
 
         try:
-            chars = list(sent.lower()) # .replace(' ', ''))
+            chars = list(sent.lower())  # .replace(' ', ''))
         except:
             print("ERROR " + str(dix) + " " + str(sent))
             continue
@@ -134,7 +165,6 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
 
 
 def shuffle_matrix(x, y):
-
     stacked = np.hstack((np.matrix(x).T, np.matrix(y).T))
     np.random.shuffle(stacked)
     xi = np.array(stacked[:, 0]).flatten()
@@ -144,7 +174,6 @@ def shuffle_matrix(x, y):
 
 
 def create_vocab_set():
-
     alphabet = \
         (list(u"qwertyuiopasdfghjklzxcvbnmёйцукенгшщзхъфывапролджэячсмитьбю«»…–“”№—") +
          list(string.digits) +
@@ -170,4 +199,4 @@ def create_vocab_set():
 
 if __name__ == '__main__':
     # loading test
-    load_restoclub_data("data_test")
+    prepare_embedding_data(0.95, "data")
