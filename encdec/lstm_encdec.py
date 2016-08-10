@@ -32,7 +32,7 @@ ch.setFormatter(formatter)
 lg.addHandler(ch)
 
 
-def model(maxlen, vocab_size, latent_dim=50):
+def model(maxlen, vocab_size, latent_dim=120):
     """
         Simple autoencoder for sequences
     """
@@ -49,7 +49,8 @@ def model(maxlen, vocab_size, latent_dim=50):
     lg.info("Setting encoder: out-dim " + str(latent_dim + 1 - 1))
 
     # takes time :[
-    encoded = SimpleRNN(latent_dim, return_sequences=False)(inputs)
+    encoded = SimpleRNN(latent_dim, return_sequences=False, activation="relu")(inputs)
+    # encoded = LSTM(latent_dim, return_sequences=False)(inputs)
 
     lg.info("Encoder set: " + str(encoded))
 
@@ -60,7 +61,8 @@ def model(maxlen, vocab_size, latent_dim=50):
     lg.info("Setting decoder")
 
     # takes time :[
-    decoded = SimpleRNN(input_dim, return_sequences=True)(repeated_embedding)
+    decoded = SimpleRNN(input_dim, return_sequences=True, activation="relu")(repeated_embedding)
+    # decoded = LSTM(input_dim, return_sequences=True)(repeated_embedding)
 
     lg.info("Decoder added: " + str(decoded))
 
@@ -107,11 +109,12 @@ model_name_path = 'params/lstm_dumb_model.json'
 model_weights_path = 'params/lstm_dumb_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 700
+maxlen = 70
 
 # Compile/fit params
-batch_size = 80
-nb_epoch = 3
+batch_size = 150
+test_batch_size = 2
+nb_epoch = 300
 
 lg.info('Loading data...')
 
@@ -145,7 +148,7 @@ for e in range(nb_epoch):
 
     test_batches = data_helpers.mini_batch_generator(xi_test, yi_test, vocab,
                                                      vocab_size, check, maxlen,
-                                                     batch_size=batch_size)
+                                                     batch_size=test_batch_size)
 
     loss = 0.0
     step = 1
@@ -154,7 +157,7 @@ for e in range(nb_epoch):
     lg.info('Epoch: {}'.format(e))
     lg.info('Training started')
 
-    for x_train_batch, y_train_batch in batches:
+    for x_train_batch, y_train_batch, _, _ in batches:
 
         lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
 
@@ -163,8 +166,8 @@ for e in range(nb_epoch):
         loss_avg = loss / step
 
         if step % 5 == 0:
-            lg.info('  Step: {}'.format(step))
-            lg.info('\tLoss: {}.'.format(loss_avg))
+            lg.info('Train step: {}'.format(step))
+            lg.info('Train loss: {}'.format(loss_avg))
         step += 1
 
     test_loss = 0.0
@@ -173,18 +176,27 @@ for e in range(nb_epoch):
 
     lg.info('Testing started')
 
-    for x_test_batch, y_test_batch in test_batches:
+    for x_test_batch, y_test_batch, x_text, y_text in test_batches:
 
         lg.info('Testing on batch ' + str(x_test_batch.shape) + ' -> ' + str(y_test_batch.shape))
 
-        f_ev = dumb_model.test_on_batch(x_test_batch, x_test_batch)
+        f_ev = dumb_model.test_on_batch(x_test_batch, y_test_batch)
+
+        print(dumb_model.predict(x_test_batch))
+
         test_loss += f_ev
         test_loss_avg = test_loss / test_step
         test_step += 1
 
         if test_step % 5 == 0:
-            lg.info('  Step: {}'.format(test_step))
-            lg.info('\tLoss: {}.'.format(test_loss_avg))
+            lg.info('Test step: {}'.format(test_step))
+            lg.info('Test loss: {}'.format(test_loss_avg))
+            lg.info('Input: ' + x_text[0])
+            lg.info('Output: ' + y_text[0])
+            lg.info('Encoded input: ' + str(x_test_batch[0]))
+            predicted_seq = dumb_model.predict(np.array([x_test_batch[0]]), batch_size=1)
+            lg.info('Predicted: ' + predicted_seq)
+            lg.info('Predicted decoded: ' + data_helpers.decode_data(predicted_seq, reverse_vocab))
 
     stop = datetime.datetime.now()
     e_elap = stop - start

@@ -4,13 +4,14 @@ import json
 import math
 import numpy as np
 import string
+from random import shuffle
 
 import pandas as pd
 from keras.utils.np_utils import to_categorical
 from pandas.core.frame import DataFrame
-from random import shuffle
 
 UNKNSYM = u'ξ'
+NOSYM = u'ℵ'
 
 
 def load_ag_data():
@@ -34,7 +35,6 @@ def load_ag_data():
 
 
 def load_embedding_data():
-
     train = pd.read_csv('data/embedding/train.csv', header=None)
     train = train.dropna()
     x_train = np.array(train[0])
@@ -114,7 +114,6 @@ def load_restoclub_data(env_folder):
 
 
 def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
-
     for i in range(0, len(x), batch_size):
         x_sample = x[i:i + batch_size]
         y_sample = y[i:i + batch_size]
@@ -122,7 +121,7 @@ def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_siz
         input_data = encode_data(x_sample, maxlen, vocab, vocab_size, vocab_check)
         y_for_fitting = encode_data(y_sample, maxlen, vocab, vocab_size, vocab_check)
 
-        yield (input_data, y_for_fitting)
+        yield (input_data, y_for_fitting, x_sample, y_sample)
 
 
 def encode_data(x, maxlen, vocab, vocab_size, check):
@@ -166,8 +165,14 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
     return input_data
 
 
-def shuffle_matrix(x, y):
+def decode_data(matrix, reverse_vocab):
+    """
+        data_samples x maxlen x vocab_size
+    """
+    return "".join([reverse_vocab[np.argmax(row)] for encoded_matrix in matrix for row in encoded_matrix]).strip(NOSYM)
 
+
+def shuffle_matrix(x, y):
     stacked = np.hstack((np.matrix(x).T, np.matrix(y).T))
     np.random.shuffle(stacked)
     xi = np.array(stacked[:, 0]).flatten()
@@ -178,7 +183,7 @@ def shuffle_matrix(x, y):
 
 def create_vocab_set():
     alphabet = \
-        (list(u"qwertyuiopasdfghjklzxcvbnmёйцукенгшщзхъфывапролджэячсмитьбю«»…–“”№—") +
+        (list(NOSYM + u"qwertyuiopasdfghjklzxcvbnmёйцукенгшщзхъфывапролджэячсмитьбю«»…–“”№—") +
          list(string.digits) +
          list(string.punctuation) +
          ['\n', ' ', UNKNSYM])
@@ -202,4 +207,6 @@ def create_vocab_set():
 
 if __name__ == '__main__':
     # loading test
-    prepare_embedding_data(0.95, "data")
+    # prepare_embedding_data(0.95, "data")
+    vocab, reverse_vocab, vocab_size, check = create_vocab_set()
+    print(decode_data(encode_data(np.array([u"Аллоу, это прачечная?! dddℶ2134@##ℶ##fvs"]), 100, vocab, vocab_size, check), reverse_vocab))
