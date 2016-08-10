@@ -27,22 +27,16 @@ def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc,
     conv3 = Convolution1D(nb_filter=nb_filter, filter_length=filter_kernels[3],
                           border_mode='valid', activation='relu')(conv2)
 
-    # conv4 = Convolution1D(nb_filter=nb_filter, filter_length=filter_kernels[4],
-    #                       border_mode='valid', activation='relu')(conv3)
-    # conv5 = Convolution1D(nb_filter=nb_filter, filter_length=filter_kernels[5],
-    #                       border_mode='valid', activation='relu')(conv4)
-    # conv5 = BatchNormalization()(conv5)
-    # conv5 = MaxPooling1D(pool_length=3)(conv5)
-    # conv5 = Flatten()(conv5)
-
     # Two dense layers with dropout of .5
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(conv5))
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(z))
 
-    encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)  # returns a single vector, which is an embedding
+    encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+
     encoded_copied = RepeatVector(n=timesteps)(encoded)
 
     predecoded = LSTM(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+
     decoded = LSTM(output_dim=vocab_size,
                    return_sequences=True,
                    activation='softmax')(predecoded)
@@ -57,4 +51,6 @@ def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc,
         encoder = Model(input=inputs, output=encoded)
         X_encoded = encoder.predict(X)
     """
-    return sequence_autoencoder
+    encoder_only_model = Model(input=inputs, output=encoded)
+
+    return sequence_autoencoder, encoder_only_model

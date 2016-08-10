@@ -14,11 +14,19 @@ import numpy as np
 import data_helpers
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
-import logging as lg
+import logging
 
-lg.basicConfig(filename='all_results.log',
-               format='[%(asctime)s] %(name)s | %(levelname)s - %(message)s',
-               level=lg.DEBUG)
+logging.basicConfig(filename='all_results.log',
+                    format='[%(asctime)s] %(name)s | %(levelname)s - %(message)s',
+                    level=logging.DEBUG)
+
+lg = logging.getLogger("L")
+lg.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+ch.setFormatter(formatter)
+lg.addHandler(ch)
 
 # for reproducibility
 np.random.seed(123)
@@ -48,11 +56,13 @@ subset = None
 # Whether to save model parameters
 
 save = True
-model_name_path = 'params/crepe_model.json'
-model_weights_path = 'params/crepe_model_weights.h5'
+autoencoder_model_name_path = 'params/t2v_model.json'
+autoencoder_model_weights_path = 'params/t2v_model_weights.h5'
+encoder_model_name_path = 'params/et2v_model.json'
+encoder_model_weights_path = 'params/et2v_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 1014
+maxlen = 70
 
 # Filters for conv layers
 nb_filter = 512
@@ -65,12 +75,14 @@ filter_kernels = [7, 7, 3, 3]
 
 # Compile/fit params
 batch_size = 80
+test_batch_size = 30
 nb_epoch = 10
 
 # LSTM latent vector size, enc_N from the paper
-latent_dim = 2526
+latent_dim = 256
 
 lg.info('Loading data...')
+
 # Expect x to be a list of sentences. Y to be a one-hot encoding of the categories.
 (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data("data_test")
 
@@ -81,7 +93,8 @@ lg.info(str(vocab))
 test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 lg.info('Build model...')
-model = tweet2vec.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter, latent_dim)
+autoencoder_model, encoder_model = tweet2vec.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter,
+                                                   latent_dim)
 
 lg.info('Fit model...')
 initial = datetime.datetime.now()
@@ -101,7 +114,7 @@ for e in range(nb_epoch):
 
     test_batches = data_helpers.mini_batch_generator(xi_test, yi_test, vocab,
                                                      vocab_size, check, maxlen,
-                                                     batch_size=batch_size)
+                                                     batch_size=test_batch_size)
 
     # accuracy = 0.0
     loss = 0.0
@@ -109,19 +122,17 @@ for e in range(nb_epoch):
     start = datetime.datetime.now()
     lg.info('Epoch: {}'.format(e))
 
-    for x_train, y_train in batches:
+    for x_train, y_train, x_t, y_t in batches:
 
         # todo: synonym-replaced texts dataset needed
-        f = model.train_on_batch(x_train, x_train)
+        f = autoencoder_model.train_on_batch(x_train, x_train)
         loss += f
         loss_avg = loss / step
-        # accuracy += f[1]
-        # accuracy_avg = accuracy / step
 
         if step % 100 == 0:
-            lg.info('  Step: {}'.format(step))
+            lg.info('Step: {}'.format(step))
             # lg.info('\tLoss: {}. Accuracy: {}'.format(loss_avg, accuracy_avg))
-            lg.info('\tLoss: {}.'.format(loss_avg))
+            lg.info('Loss: {}.'.format(loss_avg))
         step += 1
 
     # test_accuracy = 0.0
@@ -129,14 +140,23 @@ for e in range(nb_epoch):
     test_step = 1
     test_loss_avg = 0.0
 
-    for x_test_batch, y_test_batch in test_batches:
+    for x_test_batch, y_test_batch, x_text, y_text in test_batches:
         # todo: synonym-replaced texts dataset needed
-        f_ev = model.test_on_batch(x_test_batch, x_test_batch)
+        f_ev = autoencoder_model.test_on_batch(x_test_batch, x_test_batch)
         test_loss += f_ev  # [0]
         test_loss_avg = test_loss / test_step
-        # test_accuracy += f_ev[1]
-        # test_accuracy_avg = test_accuracy / test_step
         test_step += 1
+
+        lg.info('Test step: {}, loss: {}'.format(test_step, test_loss_avg))
+        predicted_seq = autoencoder_model.predict(np.array([x_test_batch[0]]))
+        lg.info(
+            'Shapes x {} y_true {} y_pred {}'.format(
+                x_test_batch[0].shape,
+                y_test_batch[0].shape,
+                predicted_seq.shape))
+        lg.info('Input:    \t[' + x_text[0][:maxlen] + "]")
+        lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
+        lg.info('----------------------------------------------------------------')
 
     stop = datetime.datetime.now()
     e_elap = stop - start
@@ -145,9 +165,9 @@ for e in range(nb_epoch):
 
 if save:
     lg.info('Saving model params...')
-    json_string = model.to_json()
+    json_string = autoencoder_model.to_json()
 
-    with open(model_name_path, 'w') as f:
+    with open(autoencoder_model_name_path, 'w') as f:
         json.dump(json_string, f, ensure_ascii=False)
 
-    model.save_weights(model_weights_path, overwrite=True)
+    autoencoder_model.save_weights(autoencoder_model_name_path, overwrite=True)
