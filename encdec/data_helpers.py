@@ -169,7 +169,10 @@ def decode_data(matrix, reverse_vocab):
     """
         data_samples x maxlen x vocab_size
     """
-    return "".join([reverse_vocab[np.argmax(row)] for encoded_matrix in matrix for row in encoded_matrix]).strip(NOSYM)
+    try:
+        return "".join([reverse_vocab[np.argmax(row)] for encoded_matrix in matrix for row in encoded_matrix]).strip(NOSYM)
+    except:
+        return "ERROR"
 
 
 def shuffle_matrix(x, y):
@@ -202,9 +205,13 @@ def create_vocab_set():
 
 if __name__ == '__main__':
     # loading test
-    prepare_embedding_data(0.7, "data")
+    # prepare_embedding_data(0.7, "data")
     # vocab, reverse_vocab, vocab_size, check = create_vocab_set()
     # data = load_embedding_data()
     # print
     # print data[0][0][0]
     # print (decode_data(encode_data(np.array([data[0][0][0]]), 70, vocab, vocab_size, check), reverse_vocab))
+    import sklearn.metrics as ms
+
+    print ms.log_loss(np.array([[0, 1], [1, 0]]),
+                      np.array([[1.4, 0.0], [0.1, 1]]))

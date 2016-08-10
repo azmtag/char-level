@@ -15,7 +15,7 @@ from keras.layers import Input, LSTM
 from keras.layers.core import RepeatVector
 from keras.layers.recurrent import SimpleRNN
 from keras.models import Model
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 
 import data_helpers
 
@@ -32,7 +32,7 @@ ch.setFormatter(formatter)
 lg.addHandler(ch)
 
 
-def model(maxlen, vocab_size, latent_dim=120):
+def model(maxlen, vocab_size, latent_dim):
     """
         Simple autoencoder for sequences
     """
@@ -48,7 +48,7 @@ def model(maxlen, vocab_size, latent_dim=120):
     lg.info("Setting encoder: out-dim " + str(latent_dim))
 
     # takes time :[
-    encoded = SimpleRNN(latent_dim, return_sequences=False, activation="tanh", dropout_U=0.2, dropout_W=0.1)(inputs)
+    encoded = SimpleRNN(latent_dim, return_sequences=False)(inputs)
     # encoded = LSTM(latent_dim, return_sequences=False)(inputs)
 
     lg.info("Encoder set: " + str(encoded))
@@ -59,7 +59,7 @@ def model(maxlen, vocab_size, latent_dim=120):
     lg.info("Setting decoder")
 
     # takes time :[
-    decoded = SimpleRNN(input_dim, return_sequences=True, activation="tanh")(repeated_embedding)
+    decoded = SimpleRNN(input_dim, return_sequences=True)(repeated_embedding)
     # decoded = LSTM(input_dim, return_sequences=True)(repeated_embedding)
 
     lg.info("Decoder added: " + str(decoded))
@@ -114,7 +114,7 @@ batch_size = 5000
 test_batch_size = 100
 nb_epoch = 20
 
-representation_dim = 400
+representation_dim = 40
 
 lg.info('Loading data...')
 
@@ -185,10 +185,9 @@ for e in range(nb_epoch):
         test_step += 1
 
         lg.info('Test step: {}, loss: {}'.format(test_step, test_loss_avg))
-        lg.info('Input:\t[' + x_text[0][:maxlen] + "]")
         predicted_seq = dumb_model.predict(np.array([x_test_batch[0]]))
-        # lg.info('Predicted: ' + str(predicted_seq))
-        # lg.info('Predicted.shape: ' + str(predicted_seq.shape))
+        lg.info('Shapes x {} y_true {} y_pred {}'.format(x_test_batch[0].shape, y_test_batch[0].shape, predicted_seq.shape))
+        lg.info('Input:\t[' + x_text[0][:maxlen] + "]")
         lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
         lg.info('----------------------------------------------------------------')
 
