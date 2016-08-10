@@ -13,6 +13,7 @@ import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
 from keras.layers import Input, LSTM
 from keras.layers.core import RepeatVector
+from keras.layers.recurrent import SimpleRNN
 from keras.models import Model
 from keras.optimizers import Adam
 
@@ -48,7 +49,7 @@ def model(maxlen, vocab_size, latent_dim=50):
     lg.info("Setting encoder: out-dim " + str(latent_dim + 1 - 1))
 
     # takes time :[
-    encoded = LSTM(latent_dim, return_sequences=False)(inputs)
+    encoded = SimpleRNN(latent_dim, return_sequences=False)(inputs)
 
     lg.info("Encoder set: " + str(encoded))
 
@@ -59,7 +60,7 @@ def model(maxlen, vocab_size, latent_dim=50):
     lg.info("Setting decoder")
 
     # takes time :[
-    decoded = LSTM(input_dim, return_sequences=True)(repeated_embedding)
+    decoded = SimpleRNN(input_dim, return_sequences=True)(repeated_embedding)
 
     lg.info("Decoder added: " + str(decoded))
 
@@ -161,7 +162,7 @@ for e in range(nb_epoch):
         loss += f
         loss_avg = loss / step
 
-        if step % 100 == 0:
+        if step % 5 == 0:
             lg.info('  Step: {}'.format(step))
             lg.info('\tLoss: {}.'.format(loss_avg))
         step += 1
@@ -181,7 +182,7 @@ for e in range(nb_epoch):
         test_loss_avg = test_loss / test_step
         test_step += 1
 
-        if test_step % 100 == 0:
+        if test_step % 5 == 0:
             lg.info('  Step: {}'.format(test_step))
             lg.info('\tLoss: {}.'.format(test_loss_avg))
 
