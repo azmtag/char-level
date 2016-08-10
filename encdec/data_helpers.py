@@ -7,6 +7,7 @@ import string
 from random import shuffle
 
 import pandas as pd
+from keras import backend as K
 from keras.utils.np_utils import to_categorical
 from pandas.core.frame import DataFrame
 
@@ -119,20 +120,22 @@ def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_siz
         y_sample = y[i:i + batch_size]
 
         input_data = encode_data(x_sample, maxlen, vocab, vocab_size, vocab_check)
-        y_for_fitting = encode_data(y_sample, maxlen, vocab, vocab_size, vocab_check)
+        y_for_fitting = encode_data(y_sample, maxlen, vocab, vocab_size, vocab_check, oneline=True)
 
         yield (input_data, y_for_fitting, x_sample, y_sample)
 
 
-def encode_data(x, maxlen, vocab, vocab_size, check):
+def encode_data(x, maxlen, vocab, vocab_size, check, oneline=False):
     """
         Iterate over the loaded data and create a matrix of size maxlen x vocabsize
         In this case that will be 1014x69. This is then placed in a 3D matrix of size
         data_samples x maxlen x vocab_size. Each character is encoded into a one-hot
         array. Chars not in the vocab are encoded into an all zero vector.
     """
-
-    input_data = np.zeros((len(x), maxlen, vocab_size))
+    if oneline:
+        input_data = np.zeros((len(x), maxlen * vocab_size))
+    else:
+        input_data = np.zeros((len(x), maxlen, vocab_size))
 
     for dix, sent in enumerate(x):
 
@@ -160,7 +163,10 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
 
                 sent_array[counter, :] = char_array
                 counter += 1
-        input_data[dix, :, :] = sent_array
+        if oneline:
+            input_data[dix, :] = np.reshape(sent_array, (1, 1, maxlen * vocab_size))
+        else:
+            input_data[dix, :, :] = sent_array
 
     return input_data
 
@@ -170,7 +176,8 @@ def decode_data(matrix, reverse_vocab):
         data_samples x maxlen x vocab_size
     """
     try:
-        return "".join([reverse_vocab[np.argmax(row)] for encoded_matrix in matrix for row in encoded_matrix]).strip(NOSYM)
+        return "".join([reverse_vocab[np.argmax(row)] for encoded_matrix in matrix for row in encoded_matrix]).strip(
+            NOSYM)
     except:
         return "ERROR"
 
@@ -211,7 +218,26 @@ if __name__ == '__main__':
     # print
     # print data[0][0][0]
     # print (decode_data(encode_data(np.array([data[0][0][0]]), 70, vocab, vocab_size, check), reverse_vocab))
-    import sklearn.metrics as ms
 
-    print ms.log_loss(np.array([[0, 1], [1, 0]]),
-                      np.array([[1.4, 0.0], [0.1, 1]]))
+    # i see it as 3 classes, 5 steps, 4 instances
+
+    a = np.array([[0, 1, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]])
+    b = np.array([[1.4, 0.0, 0], [0.1, 1.0, 0], [1.4, 0.0, 0], [1.4, 0.0, 0], [1.4, 0.0, 0]])
+
+    print a.shape, b.shape
+
+    a = np.array([a, a, a, a])
+    b = np.array([b, b, b, b])
+
+    print a.shape, b.shape
+
+    # for ma, mb in zip(a, b):
+    #     print ms.log_loss(ma, mb)
+
+    ka = K.variable(value=a)
+    kb = K.variable(value=b)
+
+    print K.eval(K.sum(K.categorical_crossentropy(ka, kb), axis=1))
+
+
+    # print K.categorical_crossentropy(b, a).eval()

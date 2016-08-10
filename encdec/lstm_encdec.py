@@ -12,10 +12,11 @@ import os
 import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
 from keras.layers import Input, LSTM
-from keras.layers.core import RepeatVector
+from keras.layers.core import RepeatVector, Reshape
 from keras.layers.recurrent import SimpleRNN
 from keras.models import Model
 from keras.optimizers import Adam, SGD
+from keras import backend as K
 
 import data_helpers
 
@@ -30,6 +31,10 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 ch.setFormatter(formatter)
 lg.addHandler(ch)
+
+
+# def sum_categorical_crossentropy(y_true, y_pred):
+#     return K.sum(K.categorical_crossentropy(y_true, y_pred), axis=-1)
 
 
 def model(maxlen, vocab_size, latent_dim):
@@ -64,7 +69,9 @@ def model(maxlen, vocab_size, latent_dim):
 
     lg.info("Decoder added: " + str(decoded))
 
-    sequence_autoencoder = Model(inputs, decoded)
+    reshaped_decoder = Reshape(target_shape=(1, input_dim * timesteps))(decoded)
+
+    sequence_autoencoder = Model(inputs, reshaped_decoder)
 
     lg.info("Autoencoder brought together as a model: " + str(sequence_autoencoder))
 
@@ -107,14 +114,14 @@ model_name_path = 'params/lstm_dumb_model.json'
 model_weights_path = 'params/lstm_dumb_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 10
+maxlen = 120
 
 # Compile/fit params
-batch_size = 5000
-test_batch_size = 100
+batch_size = 500
+test_batch_size = 200
 nb_epoch = 20
 
-representation_dim = 40
+representation_dim = 150
 
 lg.info('Loading data...')
 
@@ -159,7 +166,7 @@ for e in range(nb_epoch):
 
     for x_train_batch, y_train_batch, _, _ in batches:
 
-        # lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
+        lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
 
         f = dumb_model.train_on_batch(x_train_batch, y_train_batch)
         loss += f
