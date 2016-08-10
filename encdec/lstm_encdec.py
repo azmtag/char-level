@@ -1,20 +1,22 @@
 # -*- coding:utf-8 -*-
 
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
 
+import datetime
+import json
+import logging
+import numpy as np
+import os
+
+import keras.backend.tensorflow_backend as KTF
+import tensorflow as tf
 from keras.layers import Input, LSTM
 from keras.layers.core import RepeatVector
 from keras.models import Model
 from keras.optimizers import Adam
-import os
-import json
-import datetime
-import numpy as np
+
 import data_helpers
-import tensorflow as tf
-import keras.backend.tensorflow_backend as KTF
-import logging
 
 logging.basicConfig(filename='all_results.log',
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -41,29 +43,33 @@ def model(maxlen, vocab_size, latent_dim=50):
 
     inputs = Input(shape=(timesteps, input_dim))
 
-    lg.info("Input set")
+    lg.info("Input set. " + str(inputs))
+
+    lg.info("Setting encoder: out-dim " + str(latent_dim + 1 - 1))
 
     # takes time :[
-    encoded = LSTM(output_dim=latent_dim)(inputs)
+    encoded = LSTM(latent_dim, return_sequences=False)(inputs)
 
-    lg.info("Encoder set")
+    lg.info("Encoder set: " + str(encoded))
 
-    decoded = RepeatVector(timesteps)(encoded)
+    repeated_embedding = RepeatVector(timesteps)(encoded)
 
-    lg.info("Repeated embedding added")
+    lg.info("Repeated embedding added: " + str(repeated_embedding))
+
+    lg.info("Setting decoder")
 
     # takes time :[
-    decoded = LSTM(input_dim, return_sequences=True)(decoded)
+    decoded = LSTM(input_dim, return_sequences=True)(repeated_embedding)
 
-    lg.info("Decoder added")
+    lg.info("Decoder added: " + str(decoded))
 
     sequence_autoencoder = Model(inputs, decoded)
 
-    lg.info("Autoencoder brought together as a model")
+    lg.info("Autoencoder brought together as a model: " + str(sequence_autoencoder))
 
     adam = Adam()
 
-    lg.info("Adam optimizer created")
+    lg.info("Adam optimizer created: " + str(adam))
     lg.info("Model constructed, compiling now...")
 
     sequence_autoencoder.compile(loss='categorical_crossentropy', optimizer=adam)
@@ -107,9 +113,9 @@ batch_size = 80
 nb_epoch = 3
 
 lg.info('Loading data...')
-# Expect x to be a list of sentences. Y to be a one-hot encoding of the categories.
-# (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data("data_test")
-(xt, yt), (x_test, y_test) = data_helpers.load_embedding_data()
+
+# Expect x to be a list of sentences. y to also be a list of sentences
+(x_train, y_train), (x_test, y_test) = data_helpers.load_embedding_data()
 
 lg.info('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
@@ -125,32 +131,33 @@ initial = datetime.datetime.now()
 
 for e in range(nb_epoch):
 
-    xi, yi = data_helpers.shuffle_matrix(xt, yt)
+    xi, yi = data_helpers.shuffle_matrix(x_train, y_train)
     xi_test, yi_test = data_helpers.shuffle_matrix(x_test, y_test)
-    print(xi_test)
 
     if subset:
-        batches = data_helpers.mini_batch_generator(xi[:subset],
+        batches = data_helpers.mini_batch_generator(xi[:subset], yi[:subset],
                                                     vocab, vocab_size, check,
                                                     maxlen, batch_size=batch_size)
     else:
-        batches = data_helpers.mini_batch_generator(xi, vocab, vocab_size,
+        batches = data_helpers.mini_batch_generator(xi, yi, vocab, vocab_size,
                                                     check, maxlen, batch_size=batch_size)
 
-    test_batches = data_helpers.mini_batch_generator(xi_test, vocab,
+    test_batches = data_helpers.mini_batch_generator(xi_test, yi_test, vocab,
                                                      vocab_size, check, maxlen,
                                                      batch_size=batch_size)
 
     loss = 0.0
     step = 1
     start = datetime.datetime.now()
+
     lg.info('Epoch: {}'.format(e))
+    lg.info('Training started')
 
-    for x_train, _ in batches:
+    for x_train_batch, y_train_batch in batches:
 
-        print(x_train)
+        lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
 
-        f = dumb_model.train_on_batch(x_train, x_train)
+        f = dumb_model.train_on_batch(x_train_batch, y_train_batch)
         loss += f
         loss_avg = loss / step
 
@@ -163,15 +170,25 @@ for e in range(nb_epoch):
     test_loss_avg = 0.0
     test_step = 1
 
+    lg.info('Testing started')
+
     for x_test_batch, y_test_batch in test_batches:
+
+        lg.info('Testing on batch ' + str(x_test_batch.shape) + ' -> ' + str(y_test_batch.shape))
+
         f_ev = dumb_model.test_on_batch(x_test_batch, x_test_batch)
         test_loss += f_ev
         test_loss_avg = test_loss / test_step
         test_step += 1
 
+        if test_step % 100 == 0:
+            lg.info('  Step: {}'.format(test_step))
+            lg.info('\tLoss: {}.'.format(test_loss_avg))
+
     stop = datetime.datetime.now()
     e_elap = stop - start
     t_elap = stop - initial
+
     lg.info('Epoch {}. Loss: {}.\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, e_elap, t_elap))
 
 if save:

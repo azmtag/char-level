@@ -113,14 +113,16 @@ def load_restoclub_data(env_folder):
         load_restoclub_data(env_folder)
 
 
-def mini_batch_generator(x, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
+def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
+
     for i in range(0, len(x), batch_size):
         x_sample = x[i:i + batch_size]
-        # y_sample = x[i:i + batch_size]
+        y_sample = y[i:i + batch_size]
 
         input_data = encode_data(x_sample, maxlen, vocab, vocab_size, vocab_check)
+        y_for_fitting = encode_data(y_sample, maxlen, vocab, vocab_size, vocab_check)
 
-        yield (input_data, input_data)
+        yield (input_data, y_for_fitting)
 
 
 def encode_data(x, maxlen, vocab, vocab_size, check):
@@ -165,10 +167,11 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
 
 
 def shuffle_matrix(x, y):
+
     stacked = np.hstack((np.matrix(x).T, np.matrix(y).T))
     np.random.shuffle(stacked)
     xi = np.array(stacked[:, 0]).flatten()
-    yi = np.array(stacked[:, 1:])
+    yi = np.array(stacked[:, 1]).flatten()
 
     return xi, yi
 
