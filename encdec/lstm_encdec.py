@@ -64,14 +64,14 @@ def model(maxlen, vocab_size, latent_dim):
     lg.info("Setting decoder")
 
     # takes time :[
-    decoded = SimpleRNN(input_dim, return_sequences=True)(repeated_embedding)
+    decoded = SimpleRNN(input_dim, return_sequences=True, activation='softmax')(repeated_embedding)
     # decoded = LSTM(input_dim, return_sequences=True)(repeated_embedding)
 
     lg.info("Decoder added: " + str(decoded))
 
-    reshaped_decoder = Reshape(target_shape=(1, input_dim * timesteps))(decoded)
-
-    sequence_autoencoder = Model(inputs, reshaped_decoder)
+    # reshaped_decoder = Reshape(target_shape=(1, input_dim * timesteps))(decoded)
+    # sequence_autoencoder = Model(inputs, reshaped_decoder)
+    sequence_autoencoder = Model(inputs, decoded)
 
     lg.info("Autoencoder brought together as a model: " + str(sequence_autoencoder))
 
@@ -114,7 +114,7 @@ model_name_path = 'params/lstm_dumb_model.json'
 model_weights_path = 'params/lstm_dumb_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 120
+maxlen = 75
 
 # Compile/fit params
 batch_size = 500
@@ -194,7 +194,7 @@ for e in range(nb_epoch):
         lg.info('Test step: {}, loss: {}'.format(test_step, test_loss_avg))
         predicted_seq = dumb_model.predict(np.array([x_test_batch[0]]))
         lg.info('Shapes x {} y_true {} y_pred {}'.format(x_test_batch[0].shape, y_test_batch[0].shape, predicted_seq.shape))
-        lg.info('Input:\t[' + x_text[0][:maxlen] + "]")
+        lg.info('Input:      \t[' + x_text[0][:maxlen] + "]")
         lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
         lg.info('----------------------------------------------------------------')
 

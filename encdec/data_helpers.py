@@ -120,7 +120,7 @@ def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_siz
         y_sample = y[i:i + batch_size]
 
         input_data = encode_data(x_sample, maxlen, vocab, vocab_size, vocab_check)
-        y_for_fitting = encode_data(y_sample, maxlen, vocab, vocab_size, vocab_check, oneline=True)
+        y_for_fitting = encode_data(y_sample, maxlen, vocab, vocab_size, vocab_check, oneline=False)
 
         yield (input_data, y_for_fitting, x_sample, y_sample)
 
@@ -133,7 +133,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check, oneline=False):
         array. Chars not in the vocab are encoded into an all zero vector.
     """
     if oneline:
-        input_data = np.zeros((len(x), maxlen * vocab_size))
+        input_data = np.zeros((len(x), 1, maxlen * vocab_size))
     else:
         input_data = np.zeros((len(x), maxlen, vocab_size))
 
@@ -164,7 +164,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check, oneline=False):
                 sent_array[counter, :] = char_array
                 counter += 1
         if oneline:
-            input_data[dix, :] = np.reshape(sent_array, (1, 1, maxlen * vocab_size))
+            input_data[dix, :, :] = np.reshape(sent_array, (1, maxlen * vocab_size))
         else:
             input_data[dix, :, :] = sent_array
 
@@ -212,7 +212,12 @@ def create_vocab_set():
 
 if __name__ == '__main__':
     # loading test
-    # prepare_embedding_data(0.7, "data")
+    prepare_embedding_data(0.7, "data")
+    # from keras.utils.np_utils import to_categorical
+    #
+    # y_binary = to_categorical([1,2,5,1])
+    # print y_binary
+
     # vocab, reverse_vocab, vocab_size, check = create_vocab_set()
     # data = load_embedding_data()
     # print
@@ -221,23 +226,23 @@ if __name__ == '__main__':
 
     # i see it as 3 classes, 5 steps, 4 instances
 
-    a = np.array([[0, 1, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]])
-    b = np.array([[1.4, 0.0, 0], [0.1, 1.0, 0], [1.4, 0.0, 0], [1.4, 0.0, 0], [1.4, 0.0, 0]])
-
-    print a.shape, b.shape
-
-    a = np.array([a, a, a, a])
-    b = np.array([b, b, b, b])
-
-    print a.shape, b.shape
-
-    # for ma, mb in zip(a, b):
-    #     print ms.log_loss(ma, mb)
-
-    ka = K.variable(value=a)
-    kb = K.variable(value=b)
-
-    print K.eval(K.sum(K.categorical_crossentropy(ka, kb), axis=1))
+    # a = np.array([[0, 1, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]])
+    # b = np.array([[1.4, 0.0, 0], [0.1, 1.0, 0], [1.4, 0.0, 0], [1.4, 0.0, 0], [1.4, 0.0, 0]])
+    #
+    # print a.shape, b.shape
+    #
+    # a = np.array([a, a, a, a])
+    # b = np.array([b, b, b, b])
+    #
+    # print a.shape, b.shape
+    #
+    # # for ma, mb in zip(a, b):
+    # #     print ms.log_loss(ma, mb)
+    #
+    # ka = K.variable(value=a)
+    # kb = K.variable(value=b)
+    #
+    # print K.eval(K.sum(K.categorical_crossentropy(ka, kb), axis=1))
 
 
     # print K.categorical_crossentropy(b, a).eval()
