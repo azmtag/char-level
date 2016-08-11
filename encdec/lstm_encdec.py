@@ -201,6 +201,7 @@ for e in range(nb_epoch):
             'Shapes x {} y_true {} y_pred {}'.format(x_test_batch[0].shape, y_test_batch[0].shape, predicted_seq.shape))
         lg.info('Input:    \t[' + x_text[0][:maxlen] + "]")
         lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
+        # todo: print embedding https://keras.io/getting-started/faq/#how-can-i-visualize-the-output-of-an-intermediate-layer
         lg.info('----------------------------------------------------------------')
 
     stop = datetime.datetime.now()
