@@ -2,7 +2,7 @@
 
 from __future__ import division
 from __future__ import print_function
-
+from keras.layers.wrappers import TimeDistributed
 import datetime
 import json
 import logging
@@ -11,7 +11,7 @@ import os
 
 import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
-from keras.layers import Input
+from keras.layers import Input, Dense
 from keras.layers.core import RepeatVector
 from keras.layers.recurrent import SimpleRNN, LSTM
 from keras.models import Model
@@ -50,13 +50,19 @@ def model(maxlen, vocab_size, latent_dim):
     lg.info("Setting encoder: out-dim " + str(latent_dim))
 
     # takes time :[
+    #encoded_0 = LSTM(latent_dim,
+    #               # encoded = SimpleRNN(latent_dim,
+    #               activation='relu',
+    #               return_sequences=True)(inputs)
     encoded = LSTM(latent_dim,
                    # encoded = SimpleRNN(latent_dim,
                    activation='relu',
-                   return_sequences=False)(inputs)
+                   return_sequences=False)(inputs) #encoded)
     # encoded = LSTM(latent_dim, return_sequences=False)(inputs)
 
     lg.info("Encoder set: " + str(encoded))
+
+    #encoded2 = Dense(latent_dim / 3 * 2, activation='sigmoid')
 
     repeated_embedding = RepeatVector(timesteps)(encoded)
 
@@ -66,16 +72,17 @@ def model(maxlen, vocab_size, latent_dim):
     # takes time :[
     decoded = LSTM(input_dim,
                    # decoded = SimpleRNN(input_dim,
-                   inner_init='identity',
+                   #inner_init='identity',
                    return_sequences=True,
-                   activation='softmax')(repeated_embedding)
-    # decoded = LSTM(input_dim, return_sequences=True)(repeated_embedding)
+                   activation='relu')(repeated_embedding)
 
-    lg.info("Decoder added: " + str(decoded))
+    decoded_res = TimeDistributed(Dense(input_dim, activation='softmax'))(decoded)
+
+    lg.info("Decoder added: " + str(decoded_res))
 
     # reshaped_decoder = Reshape(target_shape=(1, input_dim * timesteps))(decoded)
     # sequence_autoencoder = Model(inputs, reshaped_decoder)
-    sequence_autoencoder = Model(inputs, decoded)
+    sequence_autoencoder = Model(inputs, decoded_res)
 
     lg.info("Autoencoder brought together as a model: " + str(sequence_autoencoder))
 
@@ -118,14 +125,14 @@ model_name_path = 'params/lstm_dumb_model.json'
 model_weights_path = 'params/lstm_dumb_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 4
+maxlen = 25
 
 # Compile/fit params
-batch_size = 100
-test_batch_size = 20
+batch_size = 1000
+test_batch_size = 50
 nb_epoch = 50
 
-representation_dim = 1000
+representation_dim = 450
 
 lg.info('Loading data...')
 
@@ -170,13 +177,13 @@ for e in range(nb_epoch):
 
     for x_train_batch, y_train_batch, _, _ in batches:
 
-        lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
+        # lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
 
         f = dumb_model.train_on_batch(x_train_batch, y_train_batch)
         loss += f
         loss_avg = loss / step
 
-        if step % 10 == 0:
+        if step % 50 == 0:
             lg.info('Train step: {}, loss: {}'.format(step, loss_avg))
         step += 1
 
@@ -195,14 +202,15 @@ for e in range(nb_epoch):
         test_loss_avg = test_loss / test_step
         test_step += 1
 
-        lg.info('Test step: {}, loss: {}'.format(test_step, test_loss_avg))
-        predicted_seq = dumb_model.predict(np.array([x_test_batch[0]]))
-        lg.info(
+        if test_step % 10 == 0:
+            lg.info('Test step: {}, loss: {}'.format(test_step, test_loss_avg))
+            predicted_seq = dumb_model.predict(np.array([x_test_batch[0]]))
+            lg.info(
             'Shapes x {} y_true {} y_pred {}'.format(x_test_batch[0].shape, y_test_batch[0].shape, predicted_seq.shape))
-        lg.info('Input:    \t[' + x_text[0][:maxlen] + "]")
-        lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
-        # todo: print embedding https://keras.io/getting-started/faq/#how-can-i-visualize-the-output-of-an-intermediate-layer
-        lg.info('----------------------------------------------------------------')
+            lg.info('Input:    \t[' + x_text[0][:maxlen] + "]")
+            lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
+            # todo: print embedding https://keras.io/getting-started/faq/#how-can-i-visualize-the-output-of-an-intermediate-layer
+            lg.info('----------------------------------------------------------------')
 
     stop = datetime.datetime.now()
     e_elap = stop - start

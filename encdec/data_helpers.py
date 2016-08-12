@@ -46,6 +46,8 @@ def load_embedding_data():
     x_test = np.array(test[0])
     y_test = np.array(test[1])
 
+    print (x_train.shape, y_train.shape, x_test.shape, y_test.shape)
+
     return (x_train, y_train), (x_test, y_test)
 
 
@@ -53,7 +55,9 @@ def prepare_embedding_data(splitting_ratio_train, env_folder):
     all_data_list = []
 
     with open(env_folder + '/embedding/rawtexts.txt', mode='r') as data_file:
-        all_data_list = map(lambda x: [x.strip(), x.strip()], data_file.read().split("\n"))
+        all_data_list = list(map(lambda x: [x.strip(), x.strip()], data_file.read().split("\n")))
+
+    print("all_data_list", len(all_data_list))
 
     shuffle(all_data_list)
 
