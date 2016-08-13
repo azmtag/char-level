@@ -1,10 +1,11 @@
 # -*- coding:utf-8 -*-
 
-from keras.layers import Input, LSTM
+from keras.layers import Input, LSTM, Dense
 from keras.layers.convolutional import Convolution1D, MaxPooling1D
 from keras.layers.core import RepeatVector
 from keras.models import Model
 from keras.optimizers import Adam
+from keras.layers.wrappers import TimeDistributed
 
 
 def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc, latent_dim_lstm_dec):
@@ -39,9 +40,11 @@ def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc,
 
     decoded = LSTM(output_dim=vocab_size,
                    return_sequences=True,
-                   activation='softmax')(predecoded)
+                   activation='relu')(predecoded)
 
-    sequence_autoencoder = Model(inputs, decoded)
+    decoded_res = TimeDistributed(Dense(vocab_size, activation='softmax'))(decoded)
+
+    sequence_autoencoder = Model(inputs, decoded_res)
 
     adam = Adam()
     sequence_autoencoder.compile(loss='categorical_crossentropy', optimizer=adam)
