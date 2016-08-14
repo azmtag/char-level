@@ -93,7 +93,11 @@ lg.info(str(vocab))
 test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 lg.info('Build model...')
-autoencoder_model, encoder_model = tweet2vec.model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter,
+autoencoder_model, encoder_model = tweet2vec.model(filter_kernels,
+                                                   maxlen,
+                                                   vocab_size,
+                                                   nb_filter,
+                                                   latent_dim,
                                                    latent_dim)
 
 lg.info('Fit model...')
