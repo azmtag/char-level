@@ -123,15 +123,15 @@ def load_restoclub_data_for_encdec(env_folder):
         train = pd.read_csv(env_folder + '/restoclub/train.csv', header=None)
         train = train.dropna()
 
-        x_train = np.array(train[1])
-        y_train = np.array(train[1])
+        x_train = np.array(train.ix[:,1])
+        y_train = np.array(train.ix[:,1])
 
         print(x_train.shape)
         print(y_train.shape)
 
         test = pd.read_csv(env_folder + '/restoclub/test.csv', header=None)
-        x_test = np.array(test[1])
-        y_test = np.array(test[1])
+        x_test = np.array(test.ix[:,1])
+        y_test = np.array(test.ix[:,1])
 
         return (x_train, y_train), (x_test, y_test)
     except IOError as e:
