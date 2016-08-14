@@ -9,6 +9,7 @@ from keras.layers.wrappers import TimeDistributed
 
 
 def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc, latent_dim_lstm_dec):
+
     # Define what the input shape looks like
     inputs = Input(shape=(timesteps, vocab_size), name='input', dtype='float32')
 
