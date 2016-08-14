@@ -62,24 +62,26 @@ encoder_model_name_path = 'params/et2v_model.json'
 encoder_model_weights_path = 'params/et2v_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 70
+maxlen = 6
 
 # Filters for conv layers
 nb_filter = 512
 
 # Number of units in the dense layer
-dense_outputs = 1024
+# dense_outputs = 1024
 
 # Conv layer kernel size
 filter_kernels = [7, 7, 3, 3]
 
 # Compile/fit params
-batch_size = 80
-test_batch_size = 50
+batch_size = 200
+test_batch_size = 100
 nb_epoch = 10
 
 # LSTM latent vector size, enc_N from the paper
-latent_dim = 256
+# latent_dim = 256
+latent_dim = 450
+
 
 lg.info('Loading data...')
 
