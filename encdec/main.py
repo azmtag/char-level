@@ -62,7 +62,7 @@ encoder_model_name_path = 'params/et2v_model.json'
 encoder_model_weights_path = 'params/et2v_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 15
+maxlen = 20
 
 # Filters for conv layers
 nb_filter = 512
