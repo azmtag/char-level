@@ -125,7 +125,7 @@ model_name_path = 'params/lstm_dumb_model.json'
 model_weights_path = 'params/lstm_dumb_model_weights.h5'
 
 # Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 7
+maxlen = 10
 
 # Compile/fit params
 batch_size = 1000
