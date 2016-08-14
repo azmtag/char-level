@@ -36,7 +36,6 @@ def model(maxlen, vocab_size, latent_dim):
     """
         Simple autoencoder for sequences
     """
-
     input_dim = vocab_size
     timesteps = maxlen
 
@@ -50,19 +49,17 @@ def model(maxlen, vocab_size, latent_dim):
     lg.info("Setting encoder: out-dim " + str(latent_dim))
 
     # takes time :[
-    #encoded_0 = LSTM(latent_dim,
+    # encoded_0 = LSTM(latent_dim,
     #               # encoded = SimpleRNN(latent_dim,
     #               activation='relu',
     #               return_sequences=True)(inputs)
     encoded = LSTM(latent_dim,
                    # encoded = SimpleRNN(latent_dim,
                    activation='relu',
-                   return_sequences=False)(inputs) #encoded)
+                   return_sequences=False)(inputs)  # encoded)
     # encoded = LSTM(latent_dim, return_sequences=False)(inputs)
 
     lg.info("Encoder set: " + str(encoded))
-
-    #encoded2 = Dense(latent_dim / 3 * 2, activation='sigmoid')
 
     repeated_embedding = RepeatVector(timesteps)(encoded)
 
@@ -71,8 +68,6 @@ def model(maxlen, vocab_size, latent_dim):
 
     # takes time :[
     decoded = LSTM(input_dim,
-                   # decoded = SimpleRNN(input_dim,
-                   #inner_init='identity',
                    return_sequences=True,
                    activation='relu')(repeated_embedding)
 
@@ -80,8 +75,6 @@ def model(maxlen, vocab_size, latent_dim):
 
     lg.info("Decoder added: " + str(decoded_res))
 
-    # reshaped_decoder = Reshape(target_shape=(1, input_dim * timesteps))(decoded)
-    # sequence_autoencoder = Model(inputs, reshaped_decoder)
     sequence_autoencoder = Model(inputs, decoded_res)
 
     lg.info("Autoencoder brought together as a model: " + str(sequence_autoencoder))
@@ -107,7 +100,8 @@ def get_session(gpu_fraction=0.2):
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction)
 
     if num_threads:
-        return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, intra_op_parallelism_threads=num_threads))
+        return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options,
+                                                intra_op_parallelism_threads=num_threads))
     else:
         return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
@@ -177,8 +171,6 @@ for e in range(nb_epoch):
 
     for x_train_batch, y_train_batch, _, _ in batches:
 
-        # lg.info('Training on batch ' + str(x_train_batch.shape) + ' -> ' + str(y_train_batch.shape))
-
         f = dumb_model.train_on_batch(x_train_batch, y_train_batch)
         loss += f
         loss_avg = loss / step
@@ -205,11 +197,13 @@ for e in range(nb_epoch):
         if test_step % 10 == 0:
             lg.info('Test step: {}, loss: {}'.format(test_step, test_loss_avg))
             predicted_seq = dumb_model.predict(np.array([x_test_batch[0]]))
-            lg.info(
-            'Shapes x {} y_true {} y_pred {}'.format(x_test_batch[0].shape, y_test_batch[0].shape, predicted_seq.shape))
+            lg.info('Shapes x {} y_true {} y_pred {}'.format(x_test_batch[0].shape, y_test_batch[0].shape,
+                                                             predicted_seq.shape))
             lg.info('Input:    \t[' + x_text[0][:maxlen] + "]")
             lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
-            # todo: print embedding https://keras.io/getting-started/faq/#how-can-i-visualize-the-output-of-an-intermediate-layer
+
+            # todo: print embedding
+            # todo: https://keras.io/getting-started/faq/#how-can-i-visualize-the-output-of-an-intermediate-layer
             lg.info('----------------------------------------------------------------')
 
     stop = datetime.datetime.now()
