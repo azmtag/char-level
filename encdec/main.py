@@ -125,7 +125,7 @@ for e in range(nb_epoch):
     for x_train, y_train, x_t, y_t in batches:
 
         # todo: synonym-replaced texts dataset needed
-        f = autoencoder_model.train_on_batch(x_train, x_train)
+        f = autoencoder_model.train_on_batch(x_train, y_train)
         loss += f
         loss_avg = loss / step
 
@@ -142,7 +142,7 @@ for e in range(nb_epoch):
 
     for x_test_batch, y_test_batch, x_text, y_text in test_batches:
         # todo: synonym-replaced texts dataset needed
-        f_ev = autoencoder_model.test_on_batch(x_test_batch, x_test_batch)
+        f_ev = autoencoder_model.test_on_batch(x_test_batch, y_test_batch)
         test_loss += f_ev  # [0]
         test_loss_avg = test_loss / test_step
         test_step += 1
