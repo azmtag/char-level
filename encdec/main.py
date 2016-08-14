@@ -75,7 +75,7 @@ filter_kernels = [7, 7, 3, 3]
 
 # Compile/fit params
 batch_size = 80
-test_batch_size = 30
+test_batch_size = 50
 nb_epoch = 10
 
 # LSTM latent vector size, enc_N from the paper
@@ -84,7 +84,7 @@ latent_dim = 256
 lg.info('Loading data...')
 
 # Expect x to be a list of sentences. Y to be a one-hot encoding of the categories.
-(xt, yt), (x_test, y_test) = data_helpers.load_embedding_data()
+(xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data("data")
 
 lg.info('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()

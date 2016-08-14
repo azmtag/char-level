@@ -118,6 +118,28 @@ def load_restoclub_data(env_folder):
         load_restoclub_data(env_folder)
 
 
+def load_restoclub_data_for_encdec(env_folder):
+    try:
+        train = pd.read_csv(env_folder + '/restoclub/train.csv', header=None)
+        train = train.dropna()
+
+        x_train = np.array(train[1])
+        y_train = np.array(train[1])
+
+        print(x_train.shape)
+        print(y_train.shape)
+
+        test = pd.read_csv(env_folder + '/restoclub/test.csv', header=None)
+        x_test = np.array(test[1])
+        y_test = np.array(test[1])
+
+        return (x_train, y_train), (x_test, y_test)
+    except IOError as e:
+        print (e)
+        prepare_restoclub_data(0.95, env_folder)
+        load_restoclub_data(env_folder)
+
+
 def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
     for i in range(0, len(x), batch_size):
         x_sample = x[i:i + batch_size]
