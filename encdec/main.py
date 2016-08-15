@@ -20,18 +20,6 @@ import tensorflow as tf
 import data_helpers
 import tweet2vec
 
-logging.basicConfig(filename='all_results.log',
-                    format='[%(asctime)s] %(name)s | %(levelname)s - %(message)s',
-                    level=logging.DEBUG)
-
-lg = logging.getLogger("LGR")
-lg.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-ch.setFormatter(formatter)
-lg.addHandler(ch)
-
 parser = ap.ArgumentParser(description='Params for tweet2vec [BTW, they define saved model file name]')
 
 parser.add_argument('--epochs', type=int,
@@ -72,6 +60,29 @@ gpu_fraction_default = args.gpu_fraction
 # for reproducibility
 np.random.seed(123)
 
+config_name = '_maxlen_' + str(maxlen) + \
+              '_rnn_' + rnn_type + \
+              '_rnndim_' + str(latent_dim) + \
+              '_batch_' + str(batch_size) + \
+              '_epochs_' + str(nb_epoch)
+
+autoencoder_model_name_path = 'params/encdec' + config_name + '.json'
+autoencoder_model_weights_path = 'params/encdec' + config_name + '_weights.h5'
+encoder_model_name_path = 'params/t2v' + config_name + '.json'
+encoder_model_weights_path = 'params/t2v' + config_name + '_weights.h5'
+
+logging.basicConfig(filename='all' + config_name + '.log',
+                    format='[%(asctime)s] %(name)s | %(levelname)s - %(message)s',
+                    level=logging.DEBUG)
+
+lg = logging.getLogger("LGR")
+lg.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+ch.setFormatter(formatter)
+lg.addHandler(ch)
+
 
 def get_session(gpu_fraction):
     """
@@ -95,16 +106,6 @@ subset = None
 
 # Whether to save model parameters
 save = True
-config_name = '_maxlen_' + str(maxlen) + \
-              '_rnn_' + rnn_type + \
-              '_rnndim_' + str(latent_dim) + \
-              '_batch_' + str(batch_size) + \
-              '_epochs_' + str(nb_epoch)
-
-autoencoder_model_name_path = 'params/encdec' + config_name + '.json'
-autoencoder_model_weights_path = 'params/encdec' + config_name + '_weights.h5'
-encoder_model_name_path = 'params/t2v' + config_name + '.json'
-encoder_model_weights_path = 'params/t2v' + config_name + '_weights.h5'
 
 # Filters for conv layers
 nb_filter = 512
