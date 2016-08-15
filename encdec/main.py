@@ -79,8 +79,9 @@ test_batch_size = 40
 nb_epoch = 10
 
 # LSTM latent vector size, enc_N from the paper
-latent_dim = 256
+# latent_dim = 256
 # latent_dim = 450
+latent_dim = 1024
 
 lg.info('Loading data...')
 
