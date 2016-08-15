@@ -14,44 +14,22 @@ UNKNSYM = u'ξ'
 NOSYM = u'ℵ'
 
 
-def load_ag_data():
-    train = pd.read_csv('data/ag_news_csv/train.csv', header=None)
-    train = train.dropna()
+def load_embedding_data(env_folder='data'):
 
-    x_train = train[1] + train[2]
-    x_train = np.array(x_train)
-
-    y_train = train[0] - 1
-    y_train = to_categorical(y_train)
-
-    test = pd.read_csv('data/ag_news_csv/test.csv', header=None)
-    x_test = test[1] + test[2]
-    x_test = np.array(x_test)
-
-    y_test = test[0] - 1
-    y_test = to_categorical(y_test)
-
-    return (x_train, y_train), (x_test, y_test)
-
-
-def load_embedding_data():
-    train = pd.read_csv('data/embedding/train.csv', header=None, encoding="utf-8")
+    train = pd.read_csv(env_folder + '/embedding/train.csv', header=None, encoding="utf-8")
     train = train.dropna()
     x_train = np.array(train[0])
     y_train = np.array(train[1])
 
-    test = pd.read_csv('data/embedding/test.csv', header=None, encoding="utf-8")
+    test = pd.read_csv(env_folder + '/embedding/test.csv', header=None, encoding="utf-8")
     test = test.dropna()
     x_test = np.array(test[0])
     y_test = np.array(test[1])
-
-    print (x_train.shape, y_train.shape, x_test.shape, y_test.shape)
 
     return (x_train, y_train), (x_test, y_test)
 
 
 def prepare_embedding_data(splitting_ratio_train, env_folder):
-    all_data_list = []
 
     with open(env_folder + '/embedding/rawtexts.txt', mode='r') as data_file:
         all_data_list = list(map(lambda x: [x.strip(), x.strip()], data_file.read().split("\n")))
@@ -69,7 +47,9 @@ def prepare_embedding_data(splitting_ratio_train, env_folder):
 
 
 def prepare_restoclub_data(splitting_ratio_train, env_folder):
-    json_all_data_list = []
+    """
+        Reading, splitting texts and clipped ratings-as-integers
+    """
 
     with open(env_folder + '/restoclub/restoclub.reviews.json', 'r') as data_file:
         json_all_data_list = json.load(data_file, encoding='UTF-8')
@@ -84,7 +64,6 @@ def prepare_restoclub_data(splitting_ratio_train, env_folder):
     splitting = math.floor(splitting_ratio_train * len(flat_data))
 
     train_ds = DataFrame(flat_data[:splitting])
-
     test_ds = DataFrame(flat_data[splitting:])
 
     train_ds.to_csv(env_folder + '/restoclub/train.csv', index=False, header=False, sep=",", quotechar='"')
@@ -92,22 +71,19 @@ def prepare_restoclub_data(splitting_ratio_train, env_folder):
 
 
 def load_restoclub_data(env_folder):
+    """
+        Loading prepared restoclub texts and clipped ratings-as-integers
+    """
     try:
         train = pd.read_csv(env_folder + '/restoclub/train.csv', header=None)
         train = train.dropna()
 
-        x_train = train[1]
-        x_train = np.array(x_train)
-
+        x_train = np.array(train[1])
         y_train = train[0]
 
-        print(x_train.shape)
-        print(y_train.shape)
-
         test = pd.read_csv(env_folder + '/restoclub/test.csv', header=None)
-        x_test = test[1]
-        x_test = np.array(x_test)
 
+        x_test = np.array(test[1])
         y_test = test[0]
 
         return (x_train, y_train), (x_test, y_test)
@@ -118,15 +94,15 @@ def load_restoclub_data(env_folder):
 
 
 def load_restoclub_data_for_encdec(env_folder):
+    """
+        Encoding-decoding data
+    """
     try:
         train = pd.read_csv(env_folder + '/restoclub/train.csv', header=None)
         train = train.dropna()
 
         x_train = np.array(train[1])
         y_train = np.array(train[1])
-
-        print(x_train.shape)
-        print(y_train.shape)
 
         test = pd.read_csv(env_folder + '/restoclub/test.csv', header=None)
         x_test = np.array(test[1])
@@ -139,28 +115,26 @@ def load_restoclub_data_for_encdec(env_folder):
         load_restoclub_data(env_folder)
 
 
-def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_size=128):
+def mini_batch_generator(x, y, vocab, vocab_size, vocab_check, maxlen, batch_size):
+
     for i in range(0, len(x), batch_size):
         x_sample = x[i:i + batch_size]
         y_sample = y[i:i + batch_size]
 
-        input_data = encode_data(x_sample, maxlen, vocab, vocab_size, vocab_check)
-        y_for_fitting = encode_data(y_sample, maxlen, vocab, vocab_size, vocab_check, oneline=False)
+        x_for_input = encode_data(x_sample, maxlen, vocab, vocab_size, vocab_check)
+        y_for_fitting = encode_data(y_sample, maxlen, vocab, vocab_size, vocab_check)
 
-        yield (input_data, y_for_fitting, x_sample, y_sample)
+        yield (x_for_input, y_for_fitting, x_sample, y_sample)
 
 
-def encode_data(x, maxlen, vocab, vocab_size, check, oneline=False):
+def encode_data(x, maxlen, vocab, vocab_size, check):
     """
         Iterate over the loaded data and create a matrix of size maxlen x vocabsize
         In this case that will be 1014x69. This is then placed in a 3D matrix of size
         data_samples x maxlen x vocab_size. Each character is encoded into a one-hot
         array. Chars not in the vocab are encoded into an all zero vector.
     """
-    if oneline:
-        input_data = np.zeros((len(x), 1, maxlen * vocab_size))
-    else:
-        input_data = np.zeros((len(x), maxlen, vocab_size))
+    input_data = np.zeros((len(x), maxlen, vocab_size))
 
     for dix, sent in enumerate(x):
 
@@ -188,10 +162,8 @@ def encode_data(x, maxlen, vocab, vocab_size, check, oneline=False):
 
                 sent_array[counter, :] = char_array
                 counter += 1
-        if oneline:
-            input_data[dix, :, :] = np.reshape(sent_array, (1, maxlen * vocab_size))
-        else:
-            input_data[dix, :, :] = sent_array
+
+        input_data[dix, :, :] = sent_array
 
     return input_data
 
@@ -199,6 +171,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check, oneline=False):
 def decode_data(matrix, reverse_vocab):
     """
         data_samples x maxlen x vocab_size
+        Argmaxing each row and applying reversed vocabulary for sequence decoding
     """
     try:
         return "".join([reverse_vocab[np.argmax(row)] for encoded_matrix in matrix for row in encoded_matrix]).strip(
@@ -208,6 +181,9 @@ def decode_data(matrix, reverse_vocab):
 
 
 def shuffle_matrix(x, y):
+    """
+        Joint random sort
+    """
     stacked = np.hstack((np.matrix(x).T, np.matrix(y).T))
     np.random.shuffle(stacked)
     xi = np.array(stacked[:, 0]).flatten()
@@ -236,38 +212,7 @@ def create_vocab_set():
 
 
 if __name__ == '__main__':
-    # loading test
-    prepare_embedding_data(0.7, "data")
-    # from keras.utils.np_utils import to_categorical
-    #
-    # y_binary = to_categorical([1,2,5,1])
-    # print y_binary
-
-    # vocab, reverse_vocab, vocab_size, check = create_vocab_set()
-    # data = load_embedding_data()
-    # print
-    # print data[0][0][0]
-    # print (decode_data(encode_data(np.array([data[0][0][0]]), 70, vocab, vocab_size, check), reverse_vocab))
-
-    # i see it as 3 classes, 5 steps, 4 instances
-
-    # a = np.array([[0, 1, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]])
-    # b = np.array([[1.4, 0.0, 0], [0.1, 1.0, 0], [1.4, 0.0, 0], [1.4, 0.0, 0], [1.4, 0.0, 0]])
-    #
-    # print a.shape, b.shape
-    #
-    # a = np.array([a, a, a, a])
-    # b = np.array([b, b, b, b])
-    #
-    # print a.shape, b.shape
-    #
-    # # for ma, mb in zip(a, b):
-    # #     print ms.log_loss(ma, mb)
-    #
-    # ka = K.variable(value=a)
-    # kb = K.variable(value=b)
-    #
-    # print K.eval(K.sum(K.categorical_crossentropy(ka, kb), axis=1))
-
-
-    # print K.categorical_crossentropy(b, a).eval()
+    prepare_restoclub_data(0.7, "data")
+# parser.add_argument('--spl', type=float,
+#                     default=0.9,
+#                     help='dataset splitting train/test, float')

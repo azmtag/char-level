@@ -4,36 +4,76 @@
     Run on GPU: THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 python main.py
 """
 
-from __future__ import print_function
 from __future__ import division
-import os
-import json
-import tweet2vec
+from __future__ import print_function
+
+import argparse as ap
 import datetime
-import numpy as np
-import data_helpers
-import tensorflow as tf
-import keras.backend.tensorflow_backend as KTF
+import json
 import logging
-import sys
+import os
+
+import keras.backend.tensorflow_backend as KTF
+import numpy as np
+import tensorflow as tf
+
+import data_helpers
+import tweet2vec
 
 logging.basicConfig(filename='all_results.log',
                     format='[%(asctime)s] %(name)s | %(levelname)s - %(message)s',
                     level=logging.DEBUG)
 
-lg = logging.getLogger("L")
+lg = logging.getLogger("LGR")
 lg.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 ch.setFormatter(formatter)
 lg.addHandler(ch)
+
+parser = ap.ArgumentParser(description='Params for tweet2vec [BTW, they define saved model file name]')
+
+parser.add_argument('--epochs', type=int,
+                    default=300,
+                    help='epochs count; default = 300')
+parser.add_argument('--maxlen', type=int,
+                    default=140,
+                    help='max sequence length, default = 140')
+parser.add_argument('--rnn', type=str, choices=['LSTM', 'GRU'],
+                    default='LSTM',
+                    help='recurrent layers type, default = LSTM')
+parser.add_argument('--rnndim', type=int,
+                    default=256,
+                    help='recurrent layers dimensionality, default = 256')
+parser.add_argument('--batch', type=int,
+                    default=80,
+                    help='training batch size, default = 80')
+parser.add_argument('--test_batch', type=int,
+                    default=40,
+                    help='validation batch size')
+parser.add_argument('--gpu_fraction', type=float,
+                    default=0.2,
+                    help='GPU fraction, use with care, default = 0.2')
+
+args = parser.parse_args()
+
+# setting model params
+maxlen = args.maxlen
+latent_dim = args.rnndim
+rnn_type = args.rnn
+
+# Compile/fit params
+batch_size = args.batch
+test_batch_size = args.test_batch
+nb_epoch = args.epochs
+gpu_fraction_default = args.gpu_fraction
 
 # for reproducibility
 np.random.seed(123)
 
 
-def get_session(gpu_fraction=0.2):
+def get_session(gpu_fraction):
     """
         Assume that you have 6GB of GPU memory and want to allocate ~2GB
     """
@@ -48,36 +88,29 @@ def get_session(gpu_fraction=0.2):
         return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
 
-KTF.set_session(get_session())
+KTF.set_session(get_session(gpu_fraction=gpu_fraction_default))
 
 # set parameters:
 subset = None
 
 # Whether to save model parameters
 save = True
-autoencoder_model_name_path = 'params/t2v_model.json'
-autoencoder_model_weights_path = 'params/t2v_model_weights.h5'
-encoder_model_name_path = 'params/et2v_model.json'
-encoder_model_weights_path = 'params/et2v_model_weights.h5'
+config_name = '_maxlen_' + str(maxlen) + \
+              '_rnn_' + rnn_type + \
+              '_rnndim_' + str(latent_dim) + \
+              '_batch_' + str(batch_size) + \
+              '_epochs_' + str(nb_epoch)
 
-# Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 140
+autoencoder_model_name_path = 'params/encdec' + config_name + '.json'
+autoencoder_model_weights_path = 'params/encdec' + config_name + '_weights.h5'
+encoder_model_name_path = 'params/t2v' + config_name + '.json'
+encoder_model_weights_path = 'params/t2v' + config_name + '_weights.h5'
 
 # Filters for conv layers
 nb_filter = 512
 
 # Conv layer kernel size
 filter_kernels = [7, 7, 3, 3]
-
-# Compile/fit params
-batch_size = 80
-test_batch_size = 40
-nb_epoch = 2000
-
-# LSTM latent vector size, enc_N from the paper
-latent_dim = 256
-# latent_dim = 450
-# latent_dim = 1024
 
 lg.info('Loading data...')
 
@@ -96,7 +129,8 @@ autoencoder_model, encoder_model = tweet2vec.model(filter_kernels,
                                                    vocab_size,
                                                    nb_filter,
                                                    latent_dim,
-                                                   latent_dim)
+                                                   latent_dim,
+                                                   rnn_type)
 
 lg.info('Fit model...')
 initial = datetime.datetime.now()

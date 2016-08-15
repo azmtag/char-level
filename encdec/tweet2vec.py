@@ -9,7 +9,14 @@ from keras.optimizers import Adam
 from keras.layers.wrappers import TimeDistributed
 
 
-def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc, latent_dim_lstm_dec):
+def model(filter_kernels,
+          timesteps,
+          vocab_size,
+          nb_filter,
+          latent_dim_lstm_enc,
+          latent_dim_lstm_dec,
+          recurrent_model='LSTM'
+          ):
     # Define what the input shape looks like
     inputs = Input(shape=(timesteps, vocab_size), name='input', dtype='float32')
 
@@ -33,18 +40,26 @@ def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc,
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(conv5))
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(z))
 
-    # encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
-    encoded = GRU(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+    if recurrent_model == 'GRU':
+        encoded = GRU(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+    else:
+        encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
 
     encoded_copied = RepeatVector(n=timesteps)(encoded)
 
-    # predecoded = LSTM(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
-    predecoded = GRU(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+    if recurrent_model == 'GRU':
+        predecoded = GRU(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+    else:
+        predecoded = LSTM(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
 
-    # decoded = LSTM(output_dim=vocab_size,
-    decoded = GRU(output_dim=vocab_size,
-                  return_sequences=True,
-                  activation='relu')(predecoded)
+    if recurrent_model == 'GRU':
+        decoded = GRU(output_dim=vocab_size,
+                      return_sequences=True,
+                      activation='relu')(predecoded)
+    else:
+        decoded = LSTM(output_dim=vocab_size,
+                       return_sequences=True,
+                       activation='relu')(predecoded)
 
     decoded_res = TimeDistributed(Dense(vocab_size, activation='softmax'))(decoded)
 
@@ -53,11 +68,6 @@ def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc,
     adam = Adam()
     sequence_autoencoder.compile(loss='categorical_crossentropy', optimizer=adam)
 
-    """
-    memo: How to get encoder only? Simply do after training:
-        encoder = Model(input=inputs, output=encoded)
-        X_encoded = encoder.predict(X)
-    """
     encoder_only_model = Model(input=inputs, output=encoded)
 
     return sequence_autoencoder, encoder_only_model
