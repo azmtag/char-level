@@ -15,6 +15,7 @@ import data_helpers
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
 import logging
+import sys
 
 logging.basicConfig(filename='all_results.log',
                     format='[%(asctime)s] %(name)s | %(levelname)s - %(message)s',
@@ -50,11 +51,9 @@ def get_session(gpu_fraction=0.2):
 KTF.set_session(get_session())
 
 # set parameters:
-
 subset = None
 
 # Whether to save model parameters
-
 save = True
 autoencoder_model_name_path = 'params/t2v_model.json'
 autoencoder_model_weights_path = 'params/t2v_model_weights.h5'
@@ -67,9 +66,6 @@ maxlen = 140
 # Filters for conv layers
 nb_filter = 512
 
-# Number of units in the dense layer
-# dense_outputs = 1024
-
 # Conv layer kernel size
 filter_kernels = [7, 7, 3, 3]
 
@@ -79,9 +75,9 @@ test_batch_size = 40
 nb_epoch = 10
 
 # LSTM latent vector size, enc_N from the paper
-# latent_dim = 256
+latent_dim = 256
 # latent_dim = 450
-latent_dim = 1024
+# latent_dim = 1024
 
 lg.info('Loading data...')
 
