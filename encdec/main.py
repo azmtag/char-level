@@ -210,10 +210,19 @@ for e in range(nb_epoch):
     lg.info('Epoch {}. Loss: {}.\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, e_elap, t_elap))
 
 if save:
-    lg.info('Saving model params...')
+    lg.info('Saving encdec params...')
     json_string = autoencoder_model.to_json()
 
     with open(autoencoder_model_name_path, 'w') as f:
         json.dump(json_string, f, ensure_ascii=False)
 
-    autoencoder_model.save_weights(autoencoder_model_name_path, overwrite=True)
+    autoencoder_model.save_weights(autoencoder_model_weights_path, overwrite=True)
+
+    lg.info('Saving encoder')
+
+    json_string = encoder_model.to_json()
+
+    with open(encoder_model_name_path, 'w') as f:
+        json.dump(json_string, f, ensure_ascii=False)
+
+    encoder_model.save_weights(encoder_model_weights_path, overwrite=True)
