@@ -2,18 +2,19 @@
 
 from __future__ import division
 from __future__ import print_function
-from keras.layers.wrappers import TimeDistributed
+
 import datetime
 import json
 import logging
-import numpy as np
 import os
 
 import keras.backend.tensorflow_backend as KTF
+import numpy as np
 import tensorflow as tf
 from keras.layers import Input, Dense
 from keras.layers.core import RepeatVector
-from keras.layers.recurrent import SimpleRNN, LSTM
+from keras.layers.recurrent import SimpleRNN
+from keras.layers.wrappers import TimeDistributed
 from keras.models import Model
 from keras.optimizers import Adam
 
@@ -48,16 +49,9 @@ def model(maxlen, vocab_size, latent_dim):
     lg.info("Input set. " + str(inputs))
     lg.info("Setting encoder: out-dim " + str(latent_dim))
 
-    # takes time :[
-    # encoded_0 = LSTM(latent_dim,
-    #               # encoded = SimpleRNN(latent_dim,
-    #               activation='relu',
-    #               return_sequences=True)(inputs)
     encoded = SimpleRNN(latent_dim,
-                   # encoded = SimpleRNN(latent_dim,
-                   activation='relu',
-                   return_sequences=False)(inputs)  # encoded)
-    # encoded = LSTM(latent_dim, return_sequences=False)(inputs)
+                        activation='relu',
+                        return_sequences=False)(inputs)
 
     lg.info("Encoder set: " + str(encoded))
 
@@ -66,10 +60,9 @@ def model(maxlen, vocab_size, latent_dim):
     lg.info("Repeated embedding added: " + str(repeated_embedding))
     lg.info("Setting decoder")
 
-    # takes time :[
     decoded = SimpleRNN(input_dim,
-                   return_sequences=True,
-                   activation='relu')(repeated_embedding)
+                        return_sequences=True,
+                        activation='relu')(repeated_embedding)
 
     decoded_res = TimeDistributed(Dense(input_dim, activation='softmax'))(decoded)
 
