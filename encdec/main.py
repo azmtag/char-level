@@ -86,7 +86,7 @@ latent_dim = 450
 lg.info('Loading data...')
 
 # Expect x to be a list of sentences. Y to be a one-hot encoding of the categories.
-(xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data("data")
+(xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data_for_encdec("data")
 
 lg.info('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
