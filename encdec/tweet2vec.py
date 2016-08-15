@@ -3,13 +3,13 @@
 from keras.layers import Input, LSTM, Dense
 from keras.layers.convolutional import Convolution1D, MaxPooling1D
 from keras.layers.core import RepeatVector
+from keras.layers.recurrent import GRU
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.layers.wrappers import TimeDistributed
 
 
 def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc, latent_dim_lstm_dec):
-
     # Define what the input shape looks like
     inputs = Input(shape=(timesteps, vocab_size), name='input', dtype='float32')
 
@@ -33,15 +33,18 @@ def model(filter_kernels, timesteps, vocab_size, nb_filter, latent_dim_lstm_enc,
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(conv5))
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(z))
 
-    encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+    # encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+    encoded = GRU(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
 
     encoded_copied = RepeatVector(n=timesteps)(encoded)
 
-    predecoded = LSTM(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+    # predecoded = LSTM(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+    predecoded = GRU(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
 
-    decoded = LSTM(output_dim=vocab_size,
-                   return_sequences=True,
-                   activation='relu')(predecoded)
+    # decoded = LSTM(output_dim=vocab_size,
+    decoded = GRU(output_dim=vocab_size,
+                  return_sequences=True,
+                  activation='relu')(predecoded)
 
     decoded_res = TimeDistributed(Dense(vocab_size, activation='softmax'))(decoded)
 

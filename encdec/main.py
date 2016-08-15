@@ -74,14 +74,13 @@ nb_filter = 512
 filter_kernels = [7, 7, 3, 3]
 
 # Compile/fit params
-batch_size = 200
-test_batch_size = 100
+batch_size = 80
+test_batch_size = 40
 nb_epoch = 10
 
 # LSTM latent vector size, enc_N from the paper
-# latent_dim = 256
-latent_dim = 450
-
+latent_dim = 256
+# latent_dim = 450
 
 lg.info('Loading data...')
 
@@ -162,10 +161,12 @@ for e in range(nb_epoch):
                 predicted_seq.shape))
         lg.info('Input:    \t[' + x_text[0][:maxlen] + "]")
         lg.info(u'Predicted:\t[' + data_helpers.decode_data(predicted_seq, reverse_vocab) + "]")
-        # todo: print embedding https://keras.io/getting-started/faq/#how-can-i-visualize-the-output-of-an-intermediate-layer
+        # todo: print embedding
+        # todo: https://keras.io/getting-started/faq/#how-can-i-visualize-the-output-of-an-intermediate-layer
         lg.info('----------------------------------------------------------------')
 
     stop = datetime.datetime.now()
+
     e_elap = stop - start
     t_elap = stop - initial
     lg.info('Epoch {}. Loss: {}.\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, e_elap, t_elap))
