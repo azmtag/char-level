@@ -24,25 +24,31 @@ parser = ap.ArgumentParser(description='Params for tweet2vec [BTW, they define s
 
 parser.add_argument('--epochs', type=int,
                     default=300,
-                    help='epochs count; default = 300')
+                    help='default=300; epochs count')
+
 parser.add_argument('--maxlen', type=int,
                     default=140,
-                    help='max sequence length, default = 140')
-parser.add_argument('--rnn', type=str, choices=['LSTM', 'GRU'],
-                    default='LSTM',
-                    help='recurrent layers type, default = LSTM')
+                    help='default=140; max sequence length')
+
+parser.add_argument('--rnn', type=str, choices=['SimpleRNN', 'LSTM', 'GRU'],
+                    default='SimpleRNN',
+                    help='default=SimpleRNN; recurrent layers type')
+
 parser.add_argument('--rnndim', type=int,
                     default=256,
-                    help='recurrent layers dimensionality, default = 256')
+                    help='default=256; recurrent layers dimensionality')
+
 parser.add_argument('--batch', type=int,
                     default=80,
-                    help='training batch size, default = 80')
+                    help='default=80; training batch size')
+
 parser.add_argument('--test_batch', type=int,
                     default=40,
-                    help='validation batch size')
+                    help='default=40; validation batch size')
+
 parser.add_argument('--gpu_fraction', type=float,
                     default=0.2,
-                    help='GPU fraction, use with care, default = 0.2')
+                    help='default=0.2; GPU fraction, please, use with care')
 
 args = parser.parse_args()
 

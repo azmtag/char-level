@@ -3,7 +3,7 @@
 from keras.layers import Input, LSTM, Dense
 from keras.layers.convolutional import Convolution1D, MaxPooling1D
 from keras.layers.core import RepeatVector
-from keras.layers.recurrent import GRU
+from keras.layers.recurrent import GRU, SimpleRNN
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.layers.wrappers import TimeDistributed
@@ -15,8 +15,7 @@ def model(filter_kernels,
           nb_filter,
           latent_dim_lstm_enc,
           latent_dim_lstm_dec,
-          recurrent_model='LSTM'
-          ):
+          recurrent_model):
     # Define what the input shape looks like
     inputs = Input(shape=(timesteps, vocab_size), name='input', dtype='float32')
 
@@ -40,26 +39,48 @@ def model(filter_kernels,
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(conv5))
     # z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(z))
 
+    # todo: convert to map
     if recurrent_model == 'GRU':
-        encoded = GRU(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+        rec_layer_f = GRU
+    elif recurrent_model == 'LSTM':
+        rec_layer_f = LSTM
+    elif recurrent_model == 'SimpleRNN':
+        rec_layer_f = SimpleRNN
     else:
-        encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+        raise Exception('No such model ' + str(recurrent_model))
+
+    encoded = rec_layer_f(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+
+    # if recurrent_model == 'GRU':
+    #     encoded = GRU(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+    # elif recurrent_model == 'LSTM':
+    #     encoded = LSTM(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+    # elif recurrent_model == 'SimpleRNN':
+    #     encoded = SimpleRNN(output_dim=latent_dim_lstm_enc, return_sequences=False)(conv3)
+    # else:
+    #     raise Exception('No such model ' + str(recurrent_model))
 
     encoded_copied = RepeatVector(n=timesteps)(encoded)
 
-    if recurrent_model == 'GRU':
-        predecoded = GRU(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
-    else:
-        predecoded = LSTM(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+    predecoded = rec_layer_f(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
 
-    if recurrent_model == 'GRU':
-        decoded = GRU(output_dim=vocab_size,
-                      return_sequences=True,
-                      activation='relu')(predecoded)
-    else:
-        decoded = LSTM(output_dim=vocab_size,
-                       return_sequences=True,
-                       activation='relu')(predecoded)
+    # if recurrent_model == 'GRU':
+    #     predecoded = GRU(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+    # elif recurrent_model == 'LSTM':
+    #     predecoded = LSTM(output_dim=latent_dim_lstm_dec, return_sequences=True)(encoded_copied)
+
+    decoded = rec_layer_f(output_dim=vocab_size,
+                          return_sequences=True,
+                          activation='relu')(predecoded)
+
+    # if recurrent_model == 'GRU':
+    #     decoded = GRU(output_dim=vocab_size,
+    #                   return_sequences=True,
+    #                   activation='relu')(predecoded)
+    # else:
+    #     decoded = LSTM(output_dim=vocab_size,
+    #                    return_sequences=True,
+    #                    activation='relu')(predecoded)
 
     decoded_res = TimeDistributed(Dense(vocab_size, activation='softmax'))(decoded)
 
