@@ -7,7 +7,6 @@ import string
 from random import shuffle
 
 import pandas as pd
-from keras import backend as K
 from keras.utils.np_utils import to_categorical
 from pandas.core.frame import DataFrame
 

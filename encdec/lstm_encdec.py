@@ -53,7 +53,7 @@ def model(maxlen, vocab_size, latent_dim):
     #               # encoded = SimpleRNN(latent_dim,
     #               activation='relu',
     #               return_sequences=True)(inputs)
-    encoded = LSTM(latent_dim,
+    encoded = SimpleRNN(latent_dim,
                    # encoded = SimpleRNN(latent_dim,
                    activation='relu',
                    return_sequences=False)(inputs)  # encoded)
@@ -67,7 +67,7 @@ def model(maxlen, vocab_size, latent_dim):
     lg.info("Setting decoder")
 
     # takes time :[
-    decoded = LSTM(input_dim,
+    decoded = SimpleRNN(input_dim,
                    return_sequences=True,
                    activation='relu')(repeated_embedding)
 
