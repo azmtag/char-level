@@ -72,7 +72,7 @@ filter_kernels = [7, 7, 3, 3]
 # Compile/fit params
 batch_size = 80
 test_batch_size = 40
-nb_epoch = 10
+nb_epoch = 2000
 
 # LSTM latent vector size, enc_N from the paper
 latent_dim = 256
