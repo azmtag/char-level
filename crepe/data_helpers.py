@@ -1,7 +1,7 @@
 import string
 import numpy as np
 import pandas as pd
-from keras.utils.np_utils import to_categorical
+from keras.utils.np_utils import to_categorical,normalize
 
 
 def read_data_file(fname):
@@ -10,19 +10,28 @@ def read_data_file(fname):
     content.dropna(inplace=True)
     content.reset_index(inplace=True, drop=True)
 
-    x = content[1]
+    x = content[4]
     x = np.array(x)
 
-    y = content[0] - 1
-    y = to_categorical(y)
+    # y = content[0] - 1
+    # y = to_categorical(y)
+
+    y = content[0].values / 10.0
 
     return (x, y)
 
 
 def load_restoclub_data():
 
-    train_data = read_data_file('data/train.csv')
-    test_data = read_data_file('data/test.csv')
+    train_data = read_data_file('train.csv')
+    test_data = read_data_file('test.csv')
+
+    return train_data, test_data
+
+def load_restoclub_data_with_syns():
+
+    train_data = read_data_file('train_with_syn.csv')
+    test_data = read_data_file('test.csv')
 
     return train_data, test_data
 
@@ -67,7 +76,7 @@ def encode_data(x, maxlen, vocab, vocab_size, check):
 
 
 def shuffle_matrix(x, y):
-    stacked = np.hstack((np.matrix(x).T, y))
+    stacked = np.hstack((np.matrix(x).T, np.asmatrix(y).T))
     np.random.shuffle(stacked)
     xi = np.array(stacked[:, 0]).flatten()
     yi = np.array(stacked[:, 1:])

@@ -3,9 +3,9 @@ import pandas
 import sklearn
 from sklearn.cross_validation import train_test_split
 
-input_file = 'restoclub.reviews.json'
-train_file = 'train.csv'
-test_file = 'test.csv'
+input_file = 'data/restoclub/restoclub.reviews.json'
+train_file = 'data/train.csv'
+test_file = 'data/test.csv'
 
 def read_file(fname):
     with open(fname) as data_file:

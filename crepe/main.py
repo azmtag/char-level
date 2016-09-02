@@ -1,5 +1,6 @@
 '''
 Run on GPU: THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 python main.py
+Run on GPU: KERAS_BACKEND=tensorflow python3 main.py
 '''
 
 from __future__ import print_function
@@ -9,6 +10,7 @@ import py_crepe
 import datetime
 import numpy as np
 import data_helpers
+import argparse as ap
 np.random.seed(123)  # for reproducibility
 
 import tensorflow as tf
@@ -17,8 +19,42 @@ import keras.backend.tensorflow_backend as KTF
 # for reproducibility
 np.random.seed(123)
 
+parser = ap.ArgumentParser(description='our py_crepe')
+parser.add_argument('--epochs', type=int,
+                    default=50,
+                    help='default=50; epochs count')
 
-def get_session(gpu_fraction=0.5):
+parser.add_argument('--maxlen', type=int,
+                    default=1024,
+                    help='default=1024; max sequence length')
+
+parser.add_argument('--rnn', type=str, choices=['SimpleRNN', 'LSTM', 'GRU'],
+                    default='SimpleRNN',
+                    help='default=SimpleRNN; recurrent layers type')
+
+parser.add_argument('--rnndim', type=int,
+                    default=256,
+                    help='default=256; recurrent layers dimensionality')
+
+parser.add_argument('--batch', type=int,
+                    default=80,
+                    help='default=80; training batch size')
+
+parser.add_argument('--syns', action="store_true", help='default=False; use synonyms')
+
+parser.add_argument('--gpu_fraction', type=float,
+                    default=0.3,
+                    help='default=0.3; GPU fraction, please, use with care')
+
+parser.add_argument('--pref', type=str, default=None, help='default=None (do not save); prefix for saving models')
+
+
+args = parser.parse_args()
+
+
+
+
+def get_session(gpu_fraction=args.gpu_fraction):
     """
         Allocating only gpu_fraction of GPU memory for TensorFlow.
     """
@@ -39,18 +75,13 @@ KTF.set_session(get_session())
 
 subset = None
 
-#Whether to save model parameters
-save = False
-model_name_path = 'params/crepe_model.json'
-model_weights_path = 'params/crepe_model_weights.h5'
-
 #Maximum length. Longer gets chopped. Shorter gets padded.
-maxlen = 5000
+maxlen = args.maxlen
 # maxlen = 1014
 
 #Model params
 #Filters for conv layers
-nb_filter = 256
+nb_filter = args.rnndim
 #Number of units in the dense layer
 dense_outputs = 1024
 #Conv layer kernel size
@@ -59,18 +90,21 @@ filter_kernels = [7, 7, 3, 3, 3, 3]
 cat_output = 10
 
 #Compile/fit params
-batch_size = 80
-nb_epoch = 10
+batch_size = args.batch
+nb_epoch = args.epochs
 
 print('Loading data...')
 #Expect x to be a list of sentences. Y to be a one-hot encoding of the
 #categories.
-(xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data()
+if args.syns:
+    (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data_with_syns()
+else:
+    (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data()
 
 print('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
 
-test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
+# test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
 print('Build model...')
 
@@ -112,25 +146,35 @@ for e in range(nb_epoch):
             print('\tLoss: {}. Accuracy: {}'.format(loss_avg, accuracy_avg))
         step += 1
 
-    test_accuracy = 0.0
+    test_acc = 0.0
     test_loss = 0.0
     test_step = 1
+    test_loss_avg = 0.0
+    test_acc_avg = 0.0
     for x_test_batch, y_test_batch in test_batches:
         f_ev = model.test_on_batch(x_test_batch, y_test_batch)
         test_loss += f_ev[0]
-        test_loss_avg = loss / step
-        test_accuracy += f_ev[1]
-        test_accuracy_avg = accuracy / step
+        test_loss_avg = test_loss / test_step
+        test_acc += f_ev[1]
+        test_acc_avg = test_acc / test_step
         test_step += 1
+        # f_ev = model.test_on_batch(x_test_batch, y_test_batch)
+        # test_loss += f_ev[0]
+        # test_loss_avg = loss / step
+        # test_accuracy += f_ev[1]
+        # test_accuracy_avg = accuracy / step
+        # test_step += 1
     stop = datetime.datetime.now()
     e_elap = stop - start
     t_elap = stop - initial
-    print('Epoch {}. Loss: {}. Accuracy: {}\nEpoch time: {}. Total time: {}\n'.format(e, test_loss, test_accuracy, e_elap, t_elap))
+    print('Epoch {}. Loss: {}. Accuracy: {}\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, test_acc_avg, e_elap, t_elap))
 
-if save:
-    print('Saving model params...')
-    json_string = model.to_json()
-    with open(model_name_path, 'w') as f:
-        json.dump(json_string, f)
+    if args.pref != None:
+        print('Saving model with prefix %s.%02d...' % (args.pref, e))
+        model_name_path = '%s.%02d.json' % (args.pref, e)
+        model_weights_path = '%s.%02d.h5' % (args.pref, e)
+        json_string = model.to_json()
+        with open(model_name_path, 'w') as f:
+            json.dump(json_string, f)
 
-    model.save_weights(model_weights_path)
+        model.save_weights(model_weights_path)

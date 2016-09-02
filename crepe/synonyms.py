@@ -115,7 +115,7 @@ if __name__ == "__main__":
             stat = defaultdict(lambda: 0)
             N = 100000
 
-            for _ in xrange(N):
+            for _ in range(N):
                 stat[Synonyms.choose(pairs)] += 1
 
             sum = 0.0
@@ -153,5 +153,20 @@ if __name__ == "__main__":
         validate_pairs(data1)
         validate_pairs(data2)
 
-        model.replace(word)
+        print(model.replace(word))
+
+    p = 0.5
+
+    model = Synonyms()
+
+    with open('train.csv') as f:
+        with open('train_syn.csv', 'w') as outf:
+            for line in f:
+                txt = ','.join(line.strip().split(',')[4:])[1:-1].strip()
+                words = [ x for x in txt.replace('.', '').replace('?', '').replace(':', '').replace('!', '').replace(':', '').split() if model.has(x) and len(x) > 3 ]
+                if len(words) > 2:
+                    for w in words:
+                        if random.random() < p:
+                            txt = txt.replace(w, model.replace(w, skip_original_word=True))
+                    outf.write(','.join(line.split(',')[:4] + ['"' + txt + '"']) + '\n')
 

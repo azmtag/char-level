@@ -38,13 +38,19 @@ def model(filter_kernels, dense_outputs, maxlen, vocab_size, nb_filter,
     z = Dropout(0.5)(Dense(dense_outputs, activation='relu')(z))
 
     #Output dense layer with softmax activation
-    pred = Dense(cat_output, activation='softmax', name='output')(z)
+    # pred = Dense(cat_output, activation='softmax', name='output')(z)
+
+    #Output dense layer with linear activation
+    pred = Dense(1, name='output')(z)
 
     model = Model(input=inputs, output=pred)
 
     #sgd = SGD(lr=0.01, momentum=0.9)
     adam = Adam()
-    model.compile(loss='categorical_crossentropy', optimizer=adam,
+    # model.compile(loss='categorical_crossentropy', optimizer=adam,
+    #               metrics=['accuracy'])
+
+    model.compile(loss='mean_squared_error', optimizer=adam,
                   metrics=['accuracy'])
 
     return model
