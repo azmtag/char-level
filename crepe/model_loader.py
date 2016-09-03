@@ -46,6 +46,7 @@ def get_session(gpu_fraction=args.gpu_fraction):
     else:
         return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
+
 KTF.set_session(get_session())
 
 # ============= MODEL ===============
@@ -56,6 +57,8 @@ json_file.close()
 
 model = model_from_json(model_as_json)
 model.load_weights(args.models_path + "/" + args.pref + ".h5")
+print (model)
+model.compile()
 
 # ============= TEST DATA =============
 
