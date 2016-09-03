@@ -11,7 +11,7 @@ def read_data_file(fname):
     content.reset_index(inplace=True, drop=True)
 
     # todo: было content[4] -- что это значит? почему?
-    x = content.ix[:, 2]
+    x = content.ix[:, 1]
     x = np.array(x)
 
     # y = content[0] - 1
