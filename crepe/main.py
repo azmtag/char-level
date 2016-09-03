@@ -52,8 +52,6 @@ parser.add_argument('--pref', type=str, default=None, help='default=None (do not
 args = parser.parse_args()
 
 
-
-
 def get_session(gpu_fraction=args.gpu_fraction):
     """
         Allocating only gpu_fraction of GPU memory for TensorFlow.

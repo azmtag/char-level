@@ -30,6 +30,8 @@ args = parser.parse_args()
 
 # ====== GPU SESSION =====================
 
+print('GPU fraction ' + str(args.gpu_fraction))
+
 
 def get_session(gpu_fraction=args.gpu_fraction):
     """
@@ -49,7 +51,6 @@ KTF.set_session(get_session())
 # ============= MODEL ===============
 
 json_file = open(args.models_path + "/" + args.pref + ".json", 'r')
-# model_as_json = json_file.read()
 model_as_json = json.load(json_file, encoding="UTF-8")
 json_file.close()
 
