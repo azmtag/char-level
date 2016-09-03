@@ -1,4 +1,9 @@
 # coding=utf-8
+"""
+Model loader and tested. Usage example
+$ python3 model_loader.py --pref pycrepe.64.00 --models-path /home/snikolenko/soft/char-level/crepe/models_senti/
+
+"""
 import argparse as ap
 import datetime
 import json
