@@ -23,12 +23,12 @@ parser.add_argument('--dataset', type=str,
 
 parser.add_argument('--pref', type=str, required=True,
                     help='no default')
-#
-# parser.add_argument('--optimizer', type=str, choices=['adam', 'rmsprop'], default='adam',
-#                     help='default=adam')
-#
-# parser.add_argument('--loss', type=str, choices=['mean_squared_error'], default='mean_squared_error',
-#                     help='default=mean_squared_error')
+
+parser.add_argument('--optimizer', type=str, choices=['adam', 'rmsprop'], default='adam',
+                    help='default=adam')
+
+parser.add_argument('--loss', type=str, choices=['mean_squared_error'], default='mean_squared_error',
+                    help='default=mean_squared_error')
 
 parser.add_argument('--batch', type=int,
                     default=80,
