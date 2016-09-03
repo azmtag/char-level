@@ -75,16 +75,16 @@ json_file.close()
 model = model_from_json(model_as_json)
 model.load_weights(args.models_path + "/" + args.pref + ".h5")
 
-# print (model)
-#
-# if args.optimizer == 'adam':
-#     optimizer = Adam()
-# else:
-#     optimizer = args.optimizer
+print (model)
 
-print("Chosen optimizer: ", model.optimizer)
+if args.optimizer == 'adam':
+    optimizer = Adam()
+else:
+    optimizer = args.optimizer
 
-model.compile(optimizer=model.optimizer, loss=model.loss, metrics=model.metrics)
+print("Chosen optimizer: ", optimizer)
+
+model.compile(optimizer=optimizer, loss=model.loss, metrics=model.metrics)
 
 print("Model loaded and compiled")
 
