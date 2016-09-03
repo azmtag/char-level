@@ -7,6 +7,8 @@ import tensorflow as tf
 from keras.models import model_from_json
 import os
 
+from keras.optimizers import Adam
+
 import data_helpers
 
 parser = ap.ArgumentParser(description='our py_crepe loader')
@@ -64,7 +66,13 @@ json_file.close()
 model = model_from_json(model_as_json)
 model.load_weights(args.models_path + "/" + args.pref + ".h5")
 print (model)
-model.compile(optimizer=args.optimizer, loss=args.loss)
+
+if args.optimizer == 'adam':
+    optimizer = Adam()
+else:
+    optimizer = args.optimizer
+
+model.compile(optimizer=optimizer, loss=args.loss)
 
 # ============= TEST DATA =============
 
