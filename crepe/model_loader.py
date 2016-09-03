@@ -4,6 +4,7 @@ import argparse as ap
 from keras.models import model_from_json
 
 import data_helpers
+import json
 
 parser = ap.ArgumentParser(description='our py_crepe loader')
 
@@ -21,7 +22,8 @@ parser.add_argument('--pref', type=str, required=True,
 args = parser.parse_args()
 
 json_file = open(args.models_path + "/" + args.pref + ".json", 'r')
-model_as_json = json_file.read()
+# model_as_json = json_file.read()
+model_as_json = json.load(json_file,encoding="UTF-8")
 json_file.close()
 
 model = model_from_json(model_as_json)
@@ -34,5 +36,6 @@ else:
 
 xi_test, yi_test = data_helpers.shuffle_matrix(x_test, y_test)
 
+# todo: kfold
 scores = model.evaluate(xi_test, yi_test, verbose=1)
 print("scores", scores)
