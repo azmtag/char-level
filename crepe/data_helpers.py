@@ -19,8 +19,6 @@ def read_data_file(fname):
 
     y = content.ix[:, 0].values / 10.0
 
-    print (x.shape, y.shape)
-
     return x, y
 
 
@@ -35,6 +33,12 @@ def load_restoclub_data_with_syns():
     train_data = read_data_file('train_with_syn.csv')
     test_data = read_data_file('test.csv')
 
+    return train_data, test_data
+
+
+def load_sentirueval_data():
+    train_data = read_data_file('data/sentirueval/train.csv')
+    test_data = read_data_file('data/sentirueval/test.csv')
     return train_data, test_data
 
 
