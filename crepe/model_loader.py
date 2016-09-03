@@ -1,12 +1,12 @@
 # coding=utf-8
 import argparse as ap
+import datetime
 import json
+import os
 
 import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
 from keras.models import model_from_json
-import os
-
 from keras.optimizers import Adam
 
 import data_helpers
@@ -99,10 +99,30 @@ else:
 
 # todo: kfold
 
+print('Input size, maxlen', model.input_shape[0])
+
 xi_test, yi_test = data_helpers.shuffle_matrix(x_test, y_test)
 test_batches = data_helpers.mini_batch_generator(xi_test, yi_test, vocab,
-                                                 vocab_size, check, model.input.shape[0],
+                                                 vocab_size, check, model.input_shape[0],
                                                  batch_size=int(args.batch))
 
-scores = model.evaluate(xi_test, yi_test, verbose=1)
-print("scores", scores)
+start = datetime.datetime.now()
+test_acc = 0.0
+test_loss = 0.0
+test_step = 1
+test_loss_avg = 0.0
+test_acc_avg = 0.0
+
+for x_test_batch, y_test_batch in test_batches:
+    f_ev = model.test_on_batch(x_test_batch, y_test_batch)
+    test_loss += f_ev[0]
+    test_loss_avg = test_loss / test_step
+    test_acc += f_ev[1]
+
+    test_acc_avg = test_acc / test_step
+    test_step += 1
+
+stop = datetime.datetime.now()
+e_elap = stop - start
+
+print('Loss: {}. Accuracy: {}\nTotal time: {}\n'.format(test_loss_avg, test_acc_avg, e_elap))
