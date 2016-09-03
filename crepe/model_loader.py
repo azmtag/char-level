@@ -97,10 +97,6 @@ else:
 
 # ============= EVAL ==================
 
-# todo: kfold
-
-print('Input size, maxlen', model.input_shape[0])
-
 xi_test, yi_test = data_helpers.shuffle_matrix(x_test, y_test)
 test_batches = data_helpers.mini_batch_generator(xi_test, yi_test, vocab,
                                                  vocab_size, check, model.input_shape[0],
