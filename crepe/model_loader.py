@@ -23,12 +23,16 @@ parser.add_argument('--dataset', type=str,
 
 parser.add_argument('--pref', type=str, required=True,
                     help='no default')
+#
+# parser.add_argument('--optimizer', type=str, choices=['adam', 'rmsprop'], default='adam',
+#                     help='default=adam')
+#
+# parser.add_argument('--loss', type=str, choices=['mean_squared_error'], default='mean_squared_error',
+#                     help='default=mean_squared_error')
 
-parser.add_argument('--optimizer', type=str, choices=['adam', 'rmsprop'], default='adam',
-                    help='default=adam')
-
-parser.add_argument('--loss', type=str, choices=['mean_squared_error'], default='mean_squared_error',
-                    help='default=mean_squared_error')
+parser.add_argument('--batch', type=int,
+                    default=80,
+                    help='default=80; test batch size')
 
 parser.add_argument('--gpu_fraction', type=float,
                     default=0.3,
@@ -57,6 +61,11 @@ def get_session(gpu_fraction=args.gpu_fraction):
 
 KTF.set_session(get_session())
 
+# ============= vACOAB =============
+
+print('Creating vocab...')
+vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
+
 # ============= MODEL ===============
 
 json_file = open(args.models_path + "/" + args.pref + ".json", 'r')
@@ -65,16 +74,17 @@ json_file.close()
 
 model = model_from_json(model_as_json)
 model.load_weights(args.models_path + "/" + args.pref + ".h5")
-print (model)
 
-if args.optimizer == 'adam':
-    optimizer = Adam()
-else:
-    optimizer = args.optimizer
+# print (model)
+#
+# if args.optimizer == 'adam':
+#     optimizer = Adam()
+# else:
+#     optimizer = args.optimizer
 
-print("Chosen optimizer: ", optimizer)
+print("Chosen optimizer: ", model.optimizer)
 
-model.compile(optimizer=optimizer, loss=args.loss, metrics=['accuracy'])
+model.compile(optimizer=model.optimizer, loss=model.loss, metrics=model.metrics)
 
 print("Model loaded and compiled")
 
@@ -85,10 +95,14 @@ if args.dataset == 'restoclub':
 else:
     raise Exception("Unknown dataset: " + args.dataset)
 
-xi_test, yi_test = data_helpers.shuffle_matrix(x_test, y_test)
-
 # ============= EVAL ==================
 
 # todo: kfold
+
+xi_test, yi_test = data_helpers.shuffle_matrix(x_test, y_test)
+test_batches = data_helpers.mini_batch_generator(xi_test, yi_test, vocab,
+                                                 vocab_size, check, model.input.shape[0],
+                                                 batch_size=int(args.batch))
+
 scores = model.evaluate(xi_test, yi_test, verbose=1)
 print("scores", scores)
