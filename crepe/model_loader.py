@@ -20,7 +20,11 @@ parser.add_argument('--pref', type=str, required=True,
 
 args = parser.parse_args()
 
-model = model_from_json(args.models_path + "/" + args.pref + ".json")
+json_file = open(args.models_path + "/" + args.pref + ".json", 'r')
+model_as_json = json_file.read()
+json_file.close()
+
+model = model_from_json(model_as_json)
 model.load_weights(args.models_path + "/" + args.pref + ".h5")
 
 if args.dataset == 'restoclub':
