@@ -72,7 +72,11 @@ if args.optimizer == 'adam':
 else:
     optimizer = args.optimizer
 
-model.compile(optimizer=optimizer, loss=args.loss)
+print("Chosen optimizer: " + optimizer)
+
+model.compile(optimizer=optimizer, loss=args.loss, metrics=['accuracy'])
+
+print("Model loaded and compiled")
 
 # ============= TEST DATA =============
 
