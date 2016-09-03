@@ -24,10 +24,10 @@ parser.add_argument('--dataset', type=str,
 parser.add_argument('--pref', type=str, required=True,
                     help='no default')
 
-parser.add_argument('--optimizer', type=str, choices=['adam', 'rmsprop'],
+parser.add_argument('--optimizer', type=str, choices=['adam', 'rmsprop'], default='adam',
                     help='default=adam')
 
-parser.add_argument('--loss', type=str, choices=['mean_squared_error'],
+parser.add_argument('--loss', type=str, choices=['mean_squared_error'], default='mean_squared_error',
                     help='default=mean_squared_error')
 
 parser.add_argument('--gpu_fraction', type=float,
@@ -72,7 +72,7 @@ if args.optimizer == 'adam':
 else:
     optimizer = args.optimizer
 
-print("Chosen optimizer: " + optimizer)
+print("Chosen optimizer: ", optimizer)
 
 model.compile(optimizer=optimizer, loss=args.loss, metrics=['accuracy'])
 
