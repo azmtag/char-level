@@ -22,6 +22,12 @@ parser.add_argument('--dataset', type=str,
 parser.add_argument('--pref', type=str, required=True,
                     help='no default')
 
+parser.add_argument('--optimizer', type=str, choices=['adam', 'rmsprop'],
+                    help='default=adam')
+
+parser.add_argument('--loss', type=str, choices=['mean_squared_error'],
+                    help='default=mean_squared_error')
+
 parser.add_argument('--gpu_fraction', type=float,
                     default=0.3,
                     help='default=0.3; GPU fraction, please, use with care')
@@ -58,7 +64,7 @@ json_file.close()
 model = model_from_json(model_as_json)
 model.load_weights(args.models_path + "/" + args.pref + ".h5")
 print (model)
-model.compile()
+model.compile(optimizer=args.optimizer, loss=args.loss)
 
 # ============= TEST DATA =============
 
