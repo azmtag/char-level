@@ -1,3 +1,4 @@
+# coding=utf-8
 import string
 import numpy as np
 import pandas as pd
@@ -27,6 +28,7 @@ def load_restoclub_data():
     test_data = read_data_file('test.csv')
 
     return train_data, test_data
+
 
 def load_restoclub_data_with_syns():
 
