@@ -43,6 +43,9 @@ args = parser.parse_args()
 # ====== GPU SESSION =====================
 
 print('GPU fraction ' + str(args.gpu_fraction))
+print('models path', args.models_path)
+print('dataset', args.dataset)
+print('config', args.pref)
 
 
 def get_session(gpu_fraction=args.gpu_fraction):
@@ -61,12 +64,13 @@ def get_session(gpu_fraction=args.gpu_fraction):
 
 KTF.set_session(get_session())
 
-# ============= vACOAB =============
+# ============= VOCAB =============
 
-print('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
 
 # ============= MODEL ===============
+
+print("Loading model from", args.models_path + "/" + args.pref + ".*")
 
 json_file = open(args.models_path + "/" + args.pref + ".json", 'r')
 model_as_json = json.load(json_file, encoding="UTF-8")
@@ -75,18 +79,16 @@ json_file.close()
 model = model_from_json(model_as_json)
 model.load_weights(args.models_path + "/" + args.pref + ".h5")
 
-print (model)
-
 if args.optimizer == 'adam':
     optimizer = Adam()
 else:
     optimizer = args.optimizer
 
-print("Chosen optimizer: ", optimizer)
+print("Chosen optimizer: ", optimizer, "compiling now...")
 
 model.compile(optimizer=optimizer, loss=args.loss, metrics=['accuracy'])
 
-print("Model loaded and compiled")
+print("Model loaded and compiled.")
 
 # ============= TEST DATA =============
 
@@ -121,4 +123,4 @@ for x_test_batch, y_test_batch in test_batches:
 stop = datetime.datetime.now()
 e_elap = stop - start
 
-print('Loss: {}. Accuracy: {}\nTotal time: {}\n'.format(test_loss_avg, test_acc_avg, e_elap))
+print('Loss: {}\nAccuracy: {}\nTotal time: {}\n'.format(test_loss_avg, test_acc_avg, e_elap))
