@@ -84,7 +84,7 @@ else:
 
 print("Chosen optimizer: ", optimizer)
 
-model.compile(optimizer=optimizer, loss=model.loss, metrics=model.metrics)
+model.compile(optimizer=optimizer, loss=args.loss, metrics=['accuracy'])
 
 print("Model loaded and compiled")
 
