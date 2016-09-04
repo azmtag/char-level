@@ -5,19 +5,26 @@ import pandas as pd
 from keras.utils.np_utils import to_categorical, normalize
 
 
-def read_data_file(fname):
+def read_data_file(fname, target_index=0, normalize=True, binary=False):
     content = pd.read_csv(fname, header=None, index_col=False)
     content.dropna(inplace=True)
     content.reset_index(inplace=True, drop=True)
 
-    #x = content.ix[:, 1]
-    x = content.ix[:, 4]
+    x = content.ix[:, content.shape[1]-1]
     x = np.array(x)
 
     # y = content[0] - 1
     # y = to_categorical(y)
 
-    y = content.ix[:, 0].values / 10.0
+    y = content.ix[:, target_index].values
+    if normalize:
+        max_y = np.max(np.abs(y))
+        y = y / max_y
+    if binary:
+        vals = list(set(y))
+        if len(vals) > 2:
+            raise Exception("Binary input data is not binary! Dataset %s, target_index=%d" % (fname, target_index) )
+        y = np.array([ 0 if a == vals[0] else 1 for a in y ])
 
     return x, y
 
@@ -28,6 +35,11 @@ def load_restoclub_data():
 
     return train_data, test_data
 
+def load_ok_data_gender():
+    train_data = read_data_file('data/ok/ok_train.csv', target_index=2, binary=True)
+    test_data = read_data_file('data/ok/ok_test.csv', target_index=2, binary=True)
+
+    return train_data, test_data
 
 def load_restoclub_data_with_syns():
     train_data = read_data_file('train_with_syn.csv')

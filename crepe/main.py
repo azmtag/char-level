@@ -16,6 +16,9 @@ np.random.seed(123)  # for reproducibility
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
 
+def my_print(s):
+    print("[" + str(datetime.datetime.now()) + "] " + s)
+
 # for reproducibility
 np.random.seed(123)
 
@@ -23,6 +26,11 @@ parser = ap.ArgumentParser(description='our py_crepe')
 parser.add_argument('--epochs', type=int,
                     default=50,
                     help='default=50; epochs count')
+
+parser.add_argument('--dataset', type=str,
+                    choices=['restoclub', 'ok'],
+                    default='restoclub',
+                    help='default=restoclub, choose dataset')
 
 parser.add_argument('--maxlen', type=int,
                     default=1024,
@@ -33,8 +41,8 @@ parser.add_argument('--rnn', type=str, choices=['SimpleRNN', 'LSTM', 'GRU'],
                     help='default=SimpleRNN; recurrent layers type')
 
 parser.add_argument('--rnndim', type=int,
-                    default=256,
-                    help='default=256; recurrent layers dimensionality')
+                    default=64,
+                    help='default=64; recurrent layers dimensionality')
 
 parser.add_argument('--batch', type=int,
                     default=80,
@@ -43,8 +51,8 @@ parser.add_argument('--batch', type=int,
 parser.add_argument('--syns', action="store_true", help='default=False; use synonyms')
 
 parser.add_argument('--gpu_fraction', type=float,
-                    default=0.3,
-                    help='default=0.3; GPU fraction, please, use with care')
+                    default=0.2,
+                    help='default=0.2; GPU fraction, please, use with care')
 
 parser.add_argument('--pref', type=str, default=None, help='default=None (do not save); prefix for saving models')
 
@@ -91,25 +99,28 @@ cat_output = 10
 batch_size = args.batch
 nb_epoch = args.epochs
 
-print('Loading data...')
-#Expect x to be a list of sentences. Y to be a one-hot encoding of the
-#categories.
-if args.syns:
-    (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data_with_syns()
+my_print('Loading dataset %s...' % ( args.dataset + " with synonyms" if args.syns else args.dataset ))
+if args.dataset == 'restoclub':
+    if args.syns:
+        (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data_with_syns()
+    else:
+        (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data()
+elif args.dataset == 'ok':
+    (xt, yt), (x_test, y_test) = data_helpers.load_ok_data_gender()
 else:
-    (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data()
+    raise Exception("Unknown dataset: " + args.dataset)
 
-print('Creating vocab...')
+my_print('Creating vocab...')
 vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
 
 # test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
 
-print('Build model...')
+my_print('Building model...')
 
 model = py_crepe.model(filter_kernels, dense_outputs, maxlen, vocab_size,
                        nb_filter, cat_output)
 
-print('Fit model...')
+my_print('Fitting model...')
 initial = datetime.datetime.now()
 for e in range(nb_epoch):
     xi, yi = data_helpers.shuffle_matrix(xt, yt)
@@ -156,16 +167,10 @@ for e in range(nb_epoch):
         test_acc += f_ev[1]
         test_acc_avg = test_acc / test_step
         test_step += 1
-        # f_ev = model.test_on_batch(x_test_batch, y_test_batch)
-        # test_loss += f_ev[0]
-        # test_loss_avg = loss / step
-        # test_accuracy += f_ev[1]
-        # test_accuracy_avg = accuracy / step
-        # test_step += 1
     stop = datetime.datetime.now()
     e_elap = stop - start
     t_elap = stop - initial
-    print('Epoch {}. Loss: {}. Accuracy: {}\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, test_acc_avg, e_elap, t_elap))
+    my_print('Epoch {}. Loss: {}. Accuracy: {}\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, test_acc_avg, e_elap, t_elap))
 
     if args.pref != None:
         print('Saving model with prefix %s.%02d...' % (args.pref, e))
