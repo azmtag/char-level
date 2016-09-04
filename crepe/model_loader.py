@@ -9,8 +9,8 @@ import datetime
 import json
 import os,glob
 
-import keras.backend.tensorflow_backend as KTF
-import tensorflow as tf
+# import keras.backend.tensorflow_backend as KTF
+# import tensorflow as tf
 from keras.models import model_from_json
 from keras.optimizers import Adam
 
@@ -95,7 +95,7 @@ def get_metrics(model, test_batches):
     # my_print('Loss: {}\nAccuracy: {}\nTotal time: {}\n'.format(test_loss_avg, test_acc_avg, e_elap))
 
 
-KTF.set_session(get_session())
+# KTF.set_session(get_session())
 
 # ============= VOCAB =============
 
@@ -118,21 +118,24 @@ my_print("Dataset %s loaded" % args.dataset)
 my_print("Loading models from %s..." % (args.models_path + "/" + args.pref + ".*") )
 
 fnames_json = sorted(glob.glob(args.models_path + '/' + args.pref + '*json'))
+
+my_print("\tcompiling for the first time from %s..." % fnames_json[0])
+json_file = open(fnames_json[0], 'r')
+model_as_json = json.load(json_file, encoding="UTF-8")
+json_file.close()
+
+if args.optimizer == 'adam':
+    optimizer = Adam()
+else:
+    optimizer = args.optimizer
+
+model = model_from_json(model_as_json)
+model.compile(optimizer=optimizer, loss=args.loss, metrics=['accuracy'])
+
+my_print("\tcompiled! now running with weights loaded from h5 files...")
 for fname_json in fnames_json:
-    json_file = open(fname_json, 'r')
-    model_as_json = json.load(json_file, encoding="UTF-8")
-    json_file.close()
-
-    model = model_from_json(model_as_json)
     model.load_weights(fname_json[:-4] + "h5")
-
-    if args.optimizer == 'adam':
-        optimizer = Adam()
-    else:
-        optimizer = args.optimizer
-
     # my_print("Chosen optimizer: ", optimizer, "compiling now...")
-    model.compile(optimizer=optimizer, loss=args.loss, metrics=['accuracy'])
 
     test_batches = data_helpers.mini_batch_generator(xi_test, yi_test, vocab,
                          vocab_size, check, model.input_shape[1],
@@ -140,4 +143,4 @@ for fname_json in fnames_json:
 
     # my_print("Model loaded and compiled.")
     test_loss_avg, test_acc_avg, e_elap = get_metrics(model, test_batches)
-    print("%s\t%.4f\t%.4f" % (fname_json.split('/')[-1], test_loss_avg, test_acc_avg))
+    print("%s\t%.8f\t%.8f" % (fname_json.split('/')[-1], test_loss_avg, test_acc_avg))
