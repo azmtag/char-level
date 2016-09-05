@@ -41,3 +41,9 @@ if __name__ == '__main__':
     pandas.DataFrame(train).to_csv('train.csv', index=False, header=False)
     pandas.DataFrame(test).to_csv('test.csv', index=False, header=False)
     # print(to_tuples(data[:1000]))
+
+
+
+
+
+

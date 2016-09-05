@@ -28,7 +28,7 @@ parser.add_argument('--epochs', type=int,
                     help='default=50; epochs count')
 
 parser.add_argument('--dataset', type=str,
-                    choices=['restoclub', 'ok'],
+                    choices=['restoclub', 'okstatus', 'okuser'],
                     default='restoclub',
                     help='default=restoclub, choose dataset')
 
@@ -39,6 +39,10 @@ parser.add_argument('--maxlen', type=int,
 parser.add_argument('--rnn', type=str, choices=['SimpleRNN', 'LSTM', 'GRU'],
                     default='SimpleRNN',
                     help='default=SimpleRNN; recurrent layers type')
+
+parser.add_argument('--optimizer', type=str, choices=['adam', 'adagrad', 'rmsprop', 'adadelta'],
+                    default='adam',
+                    help='default=adam; keras optimizer')
 
 parser.add_argument('--rnndim', type=int,
                     default=64,
@@ -100,13 +104,19 @@ batch_size = args.batch
 nb_epoch = args.epochs
 
 my_print('Loading dataset %s...' % ( args.dataset + " with synonyms" if args.syns else args.dataset ))
+mode = 'binary'
 if args.dataset == 'restoclub':
     if args.syns:
         (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data_with_syns()
     else:
         (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data()
-elif args.dataset == 'ok':
+    mode = '1mse'
+elif args.dataset == 'okstatus':
     (xt, yt), (x_test, y_test) = data_helpers.load_ok_data_gender()
+    mode = 'binary'
+elif args.dataset == 'okuser':
+    (xt, yt), (x_test, y_test) = data_helpers.load_ok_user_data_gender()
+    mode = 'binary'
 else:
     raise Exception("Unknown dataset: " + args.dataset)
 
@@ -118,7 +128,7 @@ vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
 my_print('Building model...')
 
 model = py_crepe.model(filter_kernels, dense_outputs, maxlen, vocab_size,
-                       nb_filter, cat_output)
+                       nb_filter, mode=mode, optimizer=args.optimizer)
 
 my_print('Fitting model...')
 initial = datetime.datetime.now()
@@ -143,7 +153,7 @@ for e in range(nb_epoch):
     loss = 0.0
     step = 1
     start = datetime.datetime.now()
-    print('Epoch: {}'.format(e))
+    print('Epoch: {} (step-loss-accuracy-timeepoch-timetotal)'.format(e))
     for x_train, y_train in batches:
         f = model.train_on_batch(x_train, y_train)
         loss += f[0]
@@ -151,8 +161,15 @@ for e in range(nb_epoch):
         accuracy += f[1]
         accuracy_avg = accuracy / step
         if step % 100 == 0:
-            print('  Step: {}'.format(step))
-            print('\tLoss: {}. Accuracy: {}'.format(loss_avg, accuracy_avg))
+            print('{}\t{}\t{}\t{}\t{}'.format(step, loss_avg, accuracy_avg, (datetime.datetime.now()-start), (datetime.datetime.now()-initial) ))
+        if step % 10000 == 0:
+            print('Saving model with prefix %s.%02d.%02dK...' % (args.pref, e, step/1000))
+            model_name_path = '%s.%02d.%02dK.json' % (args.pref, e, step/1000)
+            model_weights_path = '%s.%02d.%02dK.h5' % (args.pref, e, step/1000)
+            json_string = model.to_json()
+            with open(model_name_path, 'w') as f:
+                json.dump(json_string, f)
+            model.save_weights(model_weights_path)            
         step += 1
 
     test_acc = 0.0
@@ -170,7 +187,7 @@ for e in range(nb_epoch):
     stop = datetime.datetime.now()
     e_elap = stop - start
     t_elap = stop - initial
-    my_print('Epoch {}. Loss: {}. Accuracy: {}\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, test_acc_avg, e_elap, t_elap))
+    print('Epoch {}. Loss: {}. Accuracy: {}\nEpoch time: {}. Total time: {}\n'.format(e, test_loss_avg, test_acc_avg, e_elap, t_elap))
 
     if args.pref != None:
         print('Saving model with prefix %s.%02d...' % (args.pref, e))
@@ -180,4 +197,4 @@ for e in range(nb_epoch):
         with open(model_name_path, 'w') as f:
             json.dump(json_string, f)
 
-        model.save_weights(model_weights_path)
+        model.save_weights(model_weights_path, overwrite=True)
