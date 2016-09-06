@@ -14,8 +14,6 @@ from keras.layers.convolutional import Convolution1D, MaxPooling1D
 
 from enum import Enum
 
-DEBUG = True
-
 #------------------------------------#
 
 def english_alphabet():
@@ -41,7 +39,11 @@ class CrepeModel(object):
         """
 
         :param alphabet:
+            List of letters that will be used to encoded. To that list will be
+            appended digits, punctuation and new line symbol. Other symbols
+            will be skipped.
         :param filter_numbers:
+
         :param dense_outputs:
         :param filter_kernels:
         :return:
@@ -372,10 +374,12 @@ class CrepeModel(object):
 
     #------------------------------------#
 
-
 #------------------------------------#
 
 if __name__ == '__main__':
+    DEBUG = False
+
+    #--------------------------#
     if DEBUG:
         def formatter(data):
             x = data[1] + data[2]
@@ -384,10 +388,32 @@ if __name__ == '__main__':
             return (numpy.array(x), to_categorical(y))
 
         model = CrepeModel(categories=4)
-        model.load_data(path_to_data='orig_data/ag_news_csv/train.csv',
-                        #path_to_test_data='orig_data/ag_news_csv/test.csv',
+        model.load_data(path_to_data='data/train.csv',
+                        path_to_test_data='data/test.csv',
                         formatter=formatter,
                         file_type=CrepeModel.DataFileType.csv)
 
         model.run()
+    #--------------------------#
 
+    def formtatter(data):
+        total = data[1]
+        mean = data[1].mean()
+        total_data = data[1].apply(lambda x: 0 if x < mean else 1)
+
+        x = data[0]
+        y = to_categorical(total_data)
+
+        return (numpy.array(x), numpy.array(y))
+
+    # def rus alphabet
+    def rus_alphabet():
+        return list(u"абвгдеёжзийклмнопрстуфчцшщъыьэюя")
+
+    model = CrepeModel(alphabet=rus_alphabet(), categories=2)
+    model.load_data(path_to_data="data/train.csv",
+                    path_to_test_data="data/test.csv",
+                    formatter=formtatter,
+                    file_type=CrepeModel.DataFileType.csv)
+
+    model.run()
