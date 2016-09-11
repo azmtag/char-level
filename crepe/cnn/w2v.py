@@ -33,9 +33,13 @@ def train_word2vec(sentence_matrix, vocabulary_inv,
         # Initialize and train the model
         print "Training Word2Vec model..."
         sentences = [[vocabulary_inv[w] for w in s] for s in sentence_matrix]
-        embedding_model = word2vec.Word2Vec(sentences, workers=num_workers,
-                                            size=num_features, min_count=min_word_count,
-                                            window=context, sample=downsampling)
+
+        embedding_model = word2vec.Word2Vec(sentences,
+                                            workers=num_workers,
+                                            size=num_features,
+                                            min_count=min_word_count,
+                                            window=context,
+                                            sample=downsampling)
 
         # If we don't plan to train the model any further, calling
         # init_sims will make the model much more memory-efficient.
