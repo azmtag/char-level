@@ -128,7 +128,7 @@ def build_word_level_data(train_data, test_data):
     sentences_test_padded = pad_sentences(list(sentences_test))
 
     vocabulary, vocabulary_inv = \
-        build_vocab(clean_data_df(sentences_train_padded) + clean_data_df(sentences_test_padded))
+        build_vocab(sentences_train_padded + sentences_test_padded)
 
     x_train, y_train = build_input_data(sentences_train_padded, labels_train, vocabulary)
     x_test, y_test = build_input_data(sentences_test_padded, labels_test, vocabulary)
@@ -266,9 +266,11 @@ def shuffle_matrix(x, y):
     return xi, yi
 
 
-def clean_data_df(x):
+def clean_data_np(x):
+
     # Load data
-    all = [s.strip() for s in list(x.ix[:, 0])]
+    all = [s.strip() for s in list(x)]
+
     # Split by words
     x_text = [clean_str(sent) for sent in all]
     x_text = [s.split(u" ") for s in x_text]

@@ -111,7 +111,7 @@ else:
 
 my_print('Creating vocab...')
 
-_, vocabulary, vocabulary_inv = data_helpers.build_word_level_data((xt, yt), (x_test, y_test))
+_, _, _, _, vocabulary, vocabulary_inv = data_helpers.build_word_level_data((xt, yt), (x_test, y_test))
 # vocab, reverse_vocab, vocab_size, check = data_helpers.create_vocab_set()
 
 # test_data = data_helpers.encode_data(x_test, maxlen, vocab, vocab_size, check)
