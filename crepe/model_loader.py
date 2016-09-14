@@ -6,11 +6,11 @@ $ KERAS_BACKEND=tensorflow python3 model_loader.py --pref pycrepe.64 --models-pa
 """
 import argparse as ap
 import datetime
+import glob
 import json
-import os,glob
+import os
 
-# import keras.backend.tensorflow_backend as KTF
-# import tensorflow as tf
+import tensorflow as tf
 from keras.models import model_from_json
 from keras.optimizers import Adam
 
@@ -45,6 +45,7 @@ parser.add_argument('--gpu_fraction', type=float,
 
 args = parser.parse_args()
 
+
 def my_print(s):
     print("[" + str(datetime.datetime.now()) + "] " + s)
 
@@ -55,7 +56,6 @@ my_print('GPU fraction ' + str(args.gpu_fraction))
 my_print('models path %s' % args.models_path)
 my_print('dataset %s' % args.dataset)
 my_print('config %s' % args.pref)
-
 
 
 def get_session(gpu_fraction=args.gpu_fraction):
@@ -111,11 +111,11 @@ else:
 # ============= EVAL ==================
 
 xi_test, yi_test = data_helpers.shuffle_matrix(x_test, y_test)
-test_batches = None 
+test_batches = None
 my_print("Dataset %s loaded" % args.dataset)
 # ============= MODEL ===============
 
-my_print("Loading models from %s..." % (args.models_path + "/" + args.pref + ".*") )
+my_print("Loading models from %s..." % (args.models_path + "/" + args.pref + ".*"))
 
 fnames_json = sorted(glob.glob(args.models_path + '/' + args.pref + '*json'))
 
@@ -138,8 +138,8 @@ for fname_json in fnames_json:
     # my_print("Chosen optimizer: ", optimizer, "compiling now...")
 
     test_batches = data_helpers.mini_batch_generator(xi_test, yi_test, vocab,
-                         vocab_size, check, model.input_shape[1],
-                         batch_size=int(args.batch))
+                                                     vocab_size, check, model.input_shape[1],
+                                                     batch_size=int(args.batch))
 
     # my_print("Model loaded and compiled.")
     test_loss_avg, test_acc_avg, e_elap = get_metrics(model, test_batches)

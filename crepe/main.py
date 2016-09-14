@@ -16,6 +16,7 @@ np.random.seed(123)  # for reproducibility
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
 
+
 def my_print(s):
     print("[" + str(datetime.datetime.now()) + "] " + s)
 
@@ -82,10 +83,9 @@ KTF.set_session(get_session())
 
 
 # set parameters:
-
 subset = None
 
-#Maximum length. Longer gets chopped. Shorter gets padded.
+# Maximum length. Longer gets chopped. Shorter gets padded.
 maxlen = args.maxlen
 # maxlen = 1014
 

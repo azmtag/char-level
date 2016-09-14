@@ -35,17 +35,20 @@ def load_restoclub_data():
 
     return train_data, test_data
 
+
 def load_ok_data_gender():
     train_data = read_data_file('data/ok/ok_train.csv', target_index=2, binary=True)
     test_data = read_data_file('data/ok/ok_test.csv', target_index=2, binary=True)
 
     return train_data, test_data
 
+
 def load_ok_user_data_gender():
     train_data = read_data_file('data/ok/ok_user_train.csv', target_index=2, binary=True)
     test_data = read_data_file('data/ok/ok_user_test.csv', target_index=2, binary=True)
 
     return train_data, test_data
+
 
 def load_restoclub_data_with_syns():
     train_data = read_data_file('train_with_syn.csv')
