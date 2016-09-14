@@ -25,7 +25,7 @@ parser.add_argument('--epochs', type=int,
 
 parser.add_argument('--dataset', type=str,
                     choices=['restoclub', 'okstatus', 'okuser'],
-                    default='restoclub',
+                    default='okstatus',
                     help='default=restoclub, choose dataset')
 
 parser.add_argument('--maxlen', type=int,
@@ -92,6 +92,8 @@ nb_epoch = args.epochs
 print('Loading dataset %s...' % (args.dataset + " with synonyms" if args.syns else args.dataset))
 mode = 'binary'
 
+(xt, yt), (x_test, y_test) = (None, None), (None, None)
+
 if args.dataset == 'restoclub':
     if args.syns:
         (xt, yt), (x_test, y_test) = data_helpers.load_restoclub_data_with_syns()
@@ -119,9 +121,9 @@ my_print('Building model...')
 # print(x, y, vocabulary, vocabulary_inv)
 
 if model_variation == 'CNN-non-static' or model_variation == 'CNN-static':
-    embedding_weights = train_word2vec(x, vocabulary_inv, embedding_dim, min_word_count, context)
+    embedding_weights = train_word2vec(xt, vocabulary_inv, embedding_dim, min_word_count, context)
     if model_variation == 'CNN-static':
-        x = embedding_weights[0][x]
+        x = embedding_weights[0][xt]
 elif model_variation == 'CNN-rand':
     embedding_weights = None
 else:
@@ -150,6 +152,7 @@ print ("Fitting")
 #           verbose=2)
 
 initial = datetime.datetime.now()
+
 # set parameters:
 subset = None
 

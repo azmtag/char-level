@@ -7,6 +7,10 @@ import numpy as np
 import pandas as pd
 from gensim.models import word2vec
 
+import pymystem3
+
+mystem = pymystem3.Mystem()
+
 
 def clean_str(string):
     """
@@ -110,14 +114,22 @@ def load_data_pos_neg():
 
 
 def build_word_level_data(train_data, test_data):
+
     sentences_train, labels_train = train_data
     sentences_test, labels_test = test_data
 
-    sentences_train_padded = pad_sentences(list(sentences_train.ix[:, 0]))
-    sentences_test_padded = pad_sentences(list(sentences_test.ix[:, 0]))
+    sentences_train = [clean_str(sent) for sent in sentences_train]
+    sentences_train = [mystem.lemmatize(s) for s in sentences_train]
 
-    vocabulary, vocabulary_inv = build_vocab(clean_data_df(sentences_train_padded) +
-                                             clean_data_df(sentences_test_padded))
+    sentences_test = [clean_str(sent) for sent in sentences_test]
+    sentences_test = [mystem.lemmatize(s) for s in sentences_test]
+
+    sentences_train_padded = pad_sentences(list(sentences_train))
+    sentences_test_padded = pad_sentences(list(sentences_test))
+
+    vocabulary, vocabulary_inv = \
+        build_vocab(clean_data_df(sentences_train_padded) + clean_data_df(sentences_test_padded))
+
     x_train, y_train = build_input_data(sentences_train_padded, labels_train, vocabulary)
     x_test, y_test = build_input_data(sentences_test_padded, labels_test, vocabulary)
 
@@ -176,8 +188,8 @@ def read_data_file(fname, target_index=0, normalize=True, binary=False):
 
 
 def load_restoclub_data():
-    train_data = read_data_file('../train.csv')
-    test_data = read_data_file('../test.csv')
+    train_data = read_data_file('../train.csv', normalize=False)
+    test_data = read_data_file('../test.csv', normalize=False)
     return train_data, test_data
 
 
