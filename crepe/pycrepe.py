@@ -75,7 +75,7 @@ class CrepeModel(object):
 
     #------------------------------------#
 
-    def load_data(self, path_to_data, path_to_test_data=None, formatter=None, file_type=DataFileType.json):
+    def load_data(self, path_to_data=None, path_to_test_data=None, formatter=None, file_type=DataFileType.json):
         """
 
         :param path_to_data:
@@ -90,6 +90,10 @@ class CrepeModel(object):
             File to type.
         :return:
         """
+        if not path_to_data and not path_to_test_data:
+            raise Exception("Set path to data or path to test data")
+        # if
+
         print("Loading and preparing data start...")
         data, test_data = None, None
         x_data, y_data = None, None
@@ -97,43 +101,61 @@ class CrepeModel(object):
 
         # case of json type file
         if file_type == CrepeModel.DataFileType.json:
-            print("Loading data...")
-            data = pandas.read_json(path_to_data)
+            if path_to_data:
+                print("Loading data...")
+                data = pandas.read_json(path_to_data)
+            # if
 
             if path_to_test_data:
                 print("Loading test data...")
                 test_data = pandas.read_json(path_to_test_data)
+            # if
 
         # case of csv type file
         elif file_type == CrepeModel.DataFileType.csv:
-            print("Loading data...")
-            data = pandas.read_csv(path_to_data, header=None)
+            if path_to_data:
+                print("Loading data...")
+                data = pandas.read_csv(path_to_data, header=None)
+            # if
 
             if path_to_test_data:
                 print("Loading test data...")
                 test_data = pandas.read_csv(path_to_test_data, header=None)
+            # if
         else:
             raise Exception("Set wrong file type to read.")
+        # if
 
-        data = data.dropna()
+        if data is not None:
+            data = data.dropna()
+        # if
+
         if test_data is not None:
             test_data = test_data.dropna()
+        # if
 
         # format the data from path_to_data file
         # if formatter is None, then expected that first column is data, the second - class
         print("Data formatting...")
         if not formatter:
-            x_data = numpy.array(data[0])
-            y_data = to_categorical(data[1])
+            if data is not None:
+                x_data = numpy.array(data[0])
+                y_data = to_categorical(data[1])
+            # if
 
-            if test_data:
+            if test_data is None:
                 x_test = numpy.array(test_data[0])
                 y_test = to_categorical(test_data[1])
+            # if
         else:
-            x_data, y_data = formatter(data)
+            if data is not None:
+                x_data, y_data = formatter(data)
+            # if
 
             if test_data is not None:
                 x_test, y_test = formatter(test_data)
+            # if
+        # if
 
         # if path to test data is not specified then get all data, shuffle it, and split to 80/20
         if test_data is None:
@@ -150,26 +172,45 @@ class CrepeModel(object):
             self.__y_test = y_data[split_index:]
         else:
             # already split
-            self.__x_train = x_data
-            self.__y_train = y_data
+            if data is not None:
+                self.__x_train = x_data
+                self.__y_train = y_data
+            # if
+
             self.__x_test = x_test
             self.__y_test = y_test
+        # if
 
         # try to deduce maxlen if it is not specified
         if not self.__maxlen:
             len_func = numpy.vectorize(len)
-            lengths = len_func(self.__x_train)
+
+            if data is not None:
+                lengths = len_func(self.__x_train)
+            elif test_data is not None:
+                lengths = len_func(self.__x_test)
+            else:
+                raise Exception("Can't calculate max length!")
+            # if
+
             self.__maxlen = int(lengths.mean() + 3 * lengths.std())
 
             print("Set 'maxlen' to %s" % self.__maxlen)
+        # if
 
-        print("Preparing data finished. Lines to train: %s. Lines to test: %s" % (len(self.__x_train), len(self.__x_test)))
+        if self.__x_train is not None:
+            print("Preparing data finished. Lines to train: %s. Lines to test: %s" % (len(self.__x_train), len(self.__x_test)))
+        else:
+            print("Preparing data finished. Lines to test: %s" % len(self.__x_test))
 
     #------------------------------------#
 
-    def run(self, epochs=10, batch_size=128):
+    def run(self, epochs=10, batch_size=128, path_to_weights=None):
         if not self.__maxlen:
             raise Exception("Max len isn't specified for the model")
+
+        if self.__x_train is None and not path_to_weights:
+            raise Exception("Train set is not set and path to weights too")
 
         if self.__batch_size != batch_size:
             self.__batch_size = batch_size
@@ -181,47 +222,56 @@ class CrepeModel(object):
 
         # building a net
         self.__finish = False # mark that model is not ready save
-        self.__build()
+        self.__build(path_to_weights)
 
         start_time = datetime.datetime.now()
-        log_step = int((len(self.__x_train) / self.__batch_size) * 0.1)
 
         for epoch in range(epochs):
             epoch_time = datetime.datetime.now()
-            x_train, y_train = self.__shuffle(self.__x_train, self.__y_train)
-            x_test, y_test = self.__shuffle(self.__x_test, self.__y_test)
 
-            train_batch = self.__batch_generator(x_train, y_train)
-            test_batch = self.__batch_generator(x_test, y_test)
+            if self.__x_train is not None:
+                log_step = int((len(self.__x_train) / self.__batch_size) * 0.1)
 
-            # TRAIN PART STARTS #
-            train_accuracy, train_loss = 0.0, 0.0
-            train_step, batch_step = 1, 1
+                x_train, y_train = self.__shuffle(self.__x_train, self.__y_train)
 
-            batch_time = datetime.datetime.now()
-            for x_batch, y_batch in train_batch:
-                train_result = self.__model.train_on_batch(x_batch, y_batch)
+                train_batch = self.__batch_generator(x_train, y_train)
 
-                # add result from this batch
-                train_loss += train_result[0]
-                train_accuracy += train_result[1]
+                # TRAIN PART STARTS #
+                train_accuracy, train_loss = 0.0, 0.0
+                train_step, batch_step = 1, 1
 
-                # calculate average
-                train_loss_avg = train_loss / train_step
-                train_accuracy_avg = train_accuracy / train_step
+                batch_time = datetime.datetime.now()
+                for x_batch, y_batch in train_batch:
+                    train_result = self.__model.train_on_batch(x_batch, y_batch)
 
-                # each 10%
-                if train_step % log_step == 0:
-                    print("Batch percent: %s" % (str(10 * batch_step) + '%'))
-                    print("Average: %s - loss, %s - accuracy" % (train_loss_avg, train_accuracy_avg))
-                    print("Batch time: %s" % (datetime.datetime.now() - batch_time))
-                    batch_time = datetime.datetime.now()
-                    batch_step += 1
+                    # add result from this batch
+                    train_loss += train_result[0]
+                    train_accuracy += train_result[1]
 
-                train_step += 1
+                    # calculate average
+                    train_loss_avg = train_loss / train_step
+                    train_accuracy_avg = train_accuracy / train_step
+
+                    # each 10%
+                    if train_step % log_step == 0:
+                        print("Batch percent: %s" % (str(10 * batch_step) + '%'))
+                        print("Average: %s - loss, %s - accuracy" % (train_loss_avg, train_accuracy_avg))
+                        print("Batch time: %s" % (datetime.datetime.now() - batch_time))
+                        batch_time = datetime.datetime.now()
+                        batch_step += 1
+                    # if
+
+                    train_step += 1
+                # for
+            else:
+                print("Skip train")
+            # if
             # TRAIN PART ENDS #
 
             # TEST PART STARTS #
+            x_test, y_test = self.__shuffle(self.__x_test, self.__y_test)
+            test_batch = self.__batch_generator(x_test, y_test)
+
             test_accuracy, test_loss = 0.0, 0.0
             test_accuracy_avg, test_loss_avg = 0.0, 0.0
             test_step = 1
@@ -238,6 +288,7 @@ class CrepeModel(object):
                 test_accuracy_avg = test_accuracy / test_step
 
                 test_step += 1
+            # if
 
             # TEST PART ENDS #
 
@@ -312,7 +363,7 @@ class CrepeModel(object):
 
     #------------------------------------#
 
-    def __build(self):
+    def __build(self, path_to_weights):
         print("Start building the model...")
         alphabet_size = len(self.__alphabet)
 
@@ -366,9 +417,13 @@ class CrepeModel(object):
 
         self.__model = Model(input=inputs, output=pred)
 
+        if path_to_weights:
+            print("Loading weights...")
+            self.__model.load_weights(path_to_weights)
+        # if
+
         sgd = SGD(lr=0.01, momentum=0.9)
-        self.__model.compile(loss='categorical_crossentropy', optimizer=sgd,
-                      metrics=['accuracy'])
+        self.__model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
         print("Building model finished")
 
@@ -385,6 +440,8 @@ if __name__ == '__main__':
             x = data[1] + data[2]
             y = data[0] - 1
 
+            print y
+
             return (numpy.array(x), to_categorical(y))
 
         model = CrepeModel(categories=4)
@@ -397,21 +454,22 @@ if __name__ == '__main__':
     #--------------------------#
 
     def formtatter(data):
-        total = data[1]
+
         mean = data[1].mean()
+
         total_data = data[1].apply(lambda x: 0 if x < mean else 1)
 
         x = data[0]
         y = to_categorical(total_data)
 
-        return (numpy.array(x), numpy.array(y))
+        return (numpy.array(x), y)
 
     # def rus alphabet
     def rus_alphabet():
         return list(u"абвгдеёжзийклмнопрстуфчцшщъыьэюя")
 
     model = CrepeModel(alphabet=rus_alphabet(), categories=2)
-    model.load_data(path_to_data="data/train.csv",
+    model.load_data(#path_to_data="data/train.csv",
                     path_to_test_data="data/test.csv",
                     formatter=formtatter,
                     file_type=CrepeModel.DataFileType.csv)
