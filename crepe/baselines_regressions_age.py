@@ -11,7 +11,7 @@ import argparse as ap
 import cPickle
 import datetime
 
-import pymystem3 as ms
+from sklearn import metrics
 from sklearn.ensemble.forest import ExtraTreesRegressor, RandomForestRegressor
 from sklearn.ensemble.gradient_boosting import GradientBoostingRegressor
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -78,7 +78,7 @@ if args.model == "extratrees" or args.model == "all":
     models.append(ExtraTreesRegressor(n_jobs=3))
 
 if args.model == "rf" or args.model == "all":
-    models.append(RandomForestRegressor(n_jobs=3))
+    models.append(RandomForestRegressor(n_estimators=100, min_samples_leaf=2, n_jobs=3))
 
 if args.model == "gbt" or args.model == "all":
     models.append(GradientBoostingRegressor(n_estimators=150, max_depth=15, verbose=True))
@@ -106,11 +106,19 @@ my_print("Vectorization done. Training...")
 for model in models:
 
     model.fit(X_train, y_train)
+    my_print(str(model))
 
     try:
-        my_print("Accuracy: " + str(model.score(X_test, y_test)) + " " + str(model))
+        y_pred = model.predict(X_test)
+        my_print("Native score: " + str(model.score(X_test, y_test)))
+        my_print("MAE: " + str(metrics.mean_absolute_error(y_pred, y_test)))
+        my_print("MSE: " + str(metrics.mean_squared_error(y_pred, y_test)))
+        my_print("R2: " + str(metrics.r2_score(y_pred, y_test)))
     except:
-        my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)) + " " + str(model))
+        y_pred = model.predict(X_test.toarray())
+        my_print("MAE: " + str(metrics.mean_absolute_error(model.predict(X_test.toarray()), y_test)))
+        my_print("MSE: " + str(metrics.mean_squared_error(model.predict(X_test.toarray()), y_test)))
+        my_print("R2: " + str(metrics.r2_score(y_pred, y_test)))
 
 with open(args.model + "_regr_" + args.pref + ".pkl", "wb") as fid:
     cPickle.dump(models, fid)
