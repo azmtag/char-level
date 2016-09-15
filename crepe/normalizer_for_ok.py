@@ -46,8 +46,8 @@ with open("data/ok/ok_train.csv") as f:
     df.to_csv("data/ok/ok_train_normalized.csv")
 
 
-with open("data/ok/ok_user_train.csv") as f:
+with open("data/ok/ok_test.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
     df.ix[:, 4] = df.ix[:, 4].map(lambda x: normalize_text(unicode(x.decode("utf-8"))))
-    df.to_csv("data/ok/ok_user_train_normalized.csv")
+    df.to_csv("data/ok/ok_test_normalized.csv")
