@@ -13,8 +13,10 @@ import datetime
 import re
 
 import pymystem3 as ms
-from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier
+from sklearn.ensemble.forest import ExtraTreesRegressor, RandomForestRegressor
+from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model.base import LinearRegression
 from sklearn.linear_model.logistic import LogisticRegression
 from sklearn.svm.classes import SVC
 
@@ -29,11 +31,11 @@ parser = ap.ArgumentParser(description='our baselines')
 
 parser.add_argument('--dataset', type=str,
                     choices=['restoclub', 'okstatus', 'okuser'],
-                    default='okstatus',
+                    default='okuser',
                     help='default=okstatus, choose dataset')
 
 parser.add_argument('--model', type=str,
-                    choices=['all', 'svm', 'logreg', 'gbt'],
+                    choices=['all', 'rf', 'extratrees', 'linreg', 'gbt'],
                     default='all',
                     help='default=all, choose model')
 
@@ -41,7 +43,7 @@ parser.add_argument('--syns', action="store_true",
                     help='default=False; use synonyms')
 
 parser.add_argument('--pref', type=str, default="default",
-                    help='default=None (do not save); prefix for saving models')
+                    help='default=default; prefix for saving models')
 
 args = parser.parse_args()
 
@@ -62,6 +64,7 @@ elif args.dataset == 'okstatus':
     mode = 'binary'
 elif args.dataset == 'okuser':
     (xt, yt), (x_test, y_test) = data_helpers.load_ok_user_data_gender()
+    xt, x_test = list(xt), list(y_test)
     mode = 'binary'
 else:
     raise Exception("Unknown dataset: " + args.dataset)
@@ -93,20 +96,28 @@ initial = datetime.datetime.now()
 
 models = []
 
-if args.model == "logreg" or args.model == "all":
-    models.append(LogisticRegression(C=0.8, n_jobs=2))
+if args.model == "linreg" or args.model == "all":
+    models.append(LinearRegression(n_jobs=2))
 
-if args.model == "svm" or args.model == "all":
-    models.append(SVC(C=0.8))
+if args.model == "extratrees" or args.model == "all":
+    models.append(ExtraTreesRegressor(n_jobs=3))
+
+if args.model == "rf" or args.model == "all":
+    models.append(RandomForestRegressor(n_jobs=3))
 
 if args.model == "gbt" or args.model == "all":
-    models.append(GradientBoostingClassifier(n_estimators=150, max_depth=15, verbose=True))
+    models.append(GradientBoostingRegressor(n_estimators=150, max_depth=15, verbose=True))
 
-if args.model not in ["svm", "all", "logreg", "gbt"]:
+if args.model not in ["linreg", "all", "rf", "gbt", "extratrees"]:
     my_print("NO SUCH MODEL: " + args.model)
     raise
 
-print("Training...")
+my_print("Training...")
+
+print(type(xt), xt.shape)
+
+xt = normalize_text(xt)
+x_test = normalize_text(x_test)
 
 # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
 vectorizer = TfidfVectorizer(min_df=1, ngram_range=(1, 2), max_df=0.9)
@@ -128,6 +139,6 @@ for model in models:
     except:
         my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)) + " " + str(model))
 
-with open(args.model + "_classifier_" + args.pref + ".pkl", "wb") as fid:
+with open(args.model + "_regr_" + args.pref + ".pkl", "wb") as fid:
     cPickle.dump(models, fid)
     cPickle.dump(vectorizer, fid)
