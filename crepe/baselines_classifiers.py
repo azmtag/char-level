@@ -123,7 +123,10 @@ y_test = y_test
 
 for model in models:
     model.fit(X_train, y_train)
-    my_print("Accuracy: " + str(model.score(X_test, y_test)) + " " + str(model))
+    try:
+        my_print("Accuracy: " + str(model.score(X_test, y_test)) + " " + str(model))
+    except:
+        my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)) + " " + str(model))
 
 with open(args.model + "_" + args.pref + ".pkl", "wb") as fid:
     cPickle.dump(models, fid)
