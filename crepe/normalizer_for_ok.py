@@ -31,37 +31,37 @@ def normalize_text(s, use_denumberization=False):
         return s
 
 
-def collect(df):
+def collect(df, f):
     line_len = len(list(df.ix[:, 4]))
     i = 0
     collector = []
     for line in list(df.ix[:, 4]):
         collector.append(normalize_text(line))
-        if i % 100 == 0:
-            print(i, "/", line_len)
+        if i % 1000 == 0:
+            print(f, i, "/", line_len)
         i += 1
     return collector
 
 with open("data/ok/ok_user_train.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
-    df.ix[:, 4] = collect(df)
+    df.ix[:, 4] = collect(df, f)
     df.to_csv("data/ok/ok_user_train_normalized.csv")
 
 with open("data/ok/ok_user_test.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
-    df.ix[:, 4] = collect(df)
+    df.ix[:, 4] = collect(df, f)
     df.to_csv("data/ok/ok_user_test_normalized.csv")
 
 with open("data/ok/ok_train.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
-    df.ix[:, 4] = collect(df)
+    df.ix[:, 4] = collect(df, f)
     df.to_csv("data/ok/ok_train_normalized.csv")
 
 with open("data/ok/ok_test.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
-    df.ix[:, 4] = collect(df)
+    df.ix[:, 4] = collect(df, f)
     df.to_csv("data/ok/ok_test_normalized.csv")
