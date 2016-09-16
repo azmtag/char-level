@@ -8,7 +8,7 @@ from functools import lru_cache
 mystem = Mystem()
 
 
-@lru_cache(maxsize=100000)
+@lru_cache(maxsize=15000)
 def lemmatize_line(w):
     lemmatized = mystem.lemmatize(w)
     return " ".join(lemmatized).strip()
