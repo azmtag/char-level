@@ -1,9 +1,10 @@
 # coding:utf-8
 
-import pandas as pd
 import re
-from pymystem3.mystem import Mystem
 from functools import lru_cache
+
+import pandas as pd
+from pymystem3.mystem import Mystem
 
 mystem = Mystem()
 
@@ -46,28 +47,29 @@ def collect(df, index, f):
     return collector
 
 
-with open("data/ok/ok_test.csv") as f:
-    df = pd.read_csv(f)
-    print("Data read", f)
-    target_index = 5
-    df.loc[:, target_index] = collect(df, target_index, f)
+def norm_file(fromm, too, target_index):
+    with open(too, "w+") as outp:
+        with open(fromm) as f:
 
-    df.to_csv("data/ok/ok_test_normalized.csv")
+            print("Data read", f)
+            count = 0
 
-with open("data/ok/ok_user_test.csv") as f:
-    df = pd.read_csv(f)
-    print("Data read", f)
-    df.loc[:, 4] = collect(df, 4, f)
-    df.to_csv("data/ok/ok_user_test_normalized.csv")
+            for line in f:
+                if count % 1000 == 0:
+                    print(count, f)
 
-with open("data/ok/ok_user_train.csv") as f:
-    df = pd.read_csv(f)
-    print("Data read", f)
-    df.loc[:, 4] = collect(df, 4, f)
-    df.to_csv("data/ok/ok_user_train_normalized.csv")
+                splitted = line.split(",")
+                pref = ",".join(splitted[:target_index])
+                norm_text = normalize_text(" ".join(splitted[target_index:]))
+                outp.write(pref)
+                outp.write(",")
+                outp.write(norm_text)
+                outp.write("\n")
+                count += 1
 
-with open("data/ok/ok_train.csv") as f:
-    df = pd.read_csv(f)
-    print("Data read", f)
-    df.loc[:, 5] = collect(df, 5, f)
-    df.to_csv("data/ok/ok_train_normalized.csv")
+
+norm_file("data/ok/ok_test.csv", "data/ok/ok_test_normalized.csv", 5)
+norm_file("data/ok/ok_user_test.csv", "data/ok/ok_user_test_normalized.csv", 4)
+norm_file("data/ok/ok_user_train.csv", "data/ok/ok_user_train_normalized.csv", 4)
+norm_file("data/ok/ok_train.csv", "data/ok/ok_train_normalized.csv", 5)
+
