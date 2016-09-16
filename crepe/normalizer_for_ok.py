@@ -42,11 +42,6 @@ def collect(df, f):
         i += 1
     return collector
 
-with open("data/ok/ok_user_train.csv") as f:
-    df = pd.read_csv(f)
-    print("Data read", f)
-    df.ix[:, 4] = collect(df, f)
-    df.to_csv("data/ok/ok_user_train_normalized.csv")
 
 with open("data/ok/ok_user_test.csv") as f:
     df = pd.read_csv(f)
@@ -54,14 +49,20 @@ with open("data/ok/ok_user_test.csv") as f:
     df.ix[:, 4] = collect(df, f)
     df.to_csv("data/ok/ok_user_test_normalized.csv")
 
-with open("data/ok/ok_train.csv") as f:
-    df = pd.read_csv(f)
-    print("Data read", f)
-    df.ix[:, 4] = collect(df, f)
-    df.to_csv("data/ok/ok_train_normalized.csv")
-
 with open("data/ok/ok_test.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
     df.ix[:, 4] = collect(df, f)
     df.to_csv("data/ok/ok_test_normalized.csv")
+
+with open("data/ok/ok_user_train.csv") as f:
+    df = pd.read_csv(f)
+    print("Data read", f)
+    df.ix[:, 4] = collect(df, f)
+    df.to_csv("data/ok/ok_user_train_normalized.csv")
+
+with open("data/ok/ok_train.csv") as f:
+    df = pd.read_csv(f)
+    print("Data read", f)
+    df.ix[:, 4] = collect(df, f)
+    df.to_csv("data/ok/ok_train_normalized.csv")
