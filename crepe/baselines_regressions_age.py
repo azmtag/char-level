@@ -81,7 +81,7 @@ if args.model == "rf" or args.model == "all":
     models.append(RandomForestRegressor(n_estimators=100, min_samples_leaf=2, n_jobs=3))
 
 if args.model == "gbt" or args.model == "all":
-    models.append(GradientBoostingRegressor(n_estimators=150, max_depth=15, verbose=True))
+    models.append(GradientBoostingRegressor(n_estimators=150, max_depth=15))
 
 if args.model not in ["linreg", "all", "rf", "gbt", "extratrees"]:
     my_print("NO SUCH MODEL: " + args.model)

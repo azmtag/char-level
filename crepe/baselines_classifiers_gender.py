@@ -80,7 +80,7 @@ if args.model == "svm" or args.model == "all":
     models.append(SVC(C=0.8))
 
 if args.model == "gbt" or args.model == "all":
-    models.append(GradientBoostingClassifier(n_estimators=150, max_depth=15, verbose=True))
+    models.append(GradientBoostingClassifier(n_estimators=150, max_depth=15))
 
 if args.model not in ["svm", "all", "logreg", "gbt"]:
     my_print("NO SUCH MODEL: " + args.model)
