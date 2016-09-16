@@ -43,17 +43,17 @@ def collect(df, f):
     return collector
 
 
-with open("data/ok/ok_user_test.csv") as f:
-    df = pd.read_csv(f)
-    print("Data read", f)
-    df.ix[:, 4] = collect(df, f)
-    df.to_csv("data/ok/ok_user_test_normalized.csv")
-
 with open("data/ok/ok_test.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
     df.ix[:, 4] = collect(df, f)
     df.to_csv("data/ok/ok_test_normalized.csv")
+
+with open("data/ok/ok_user_test.csv") as f:
+    df = pd.read_csv(f)
+    print("Data read", f)
+    df.ix[:, 4] = collect(df, f)
+    df.to_csv("data/ok/ok_user_test_normalized.csv")
 
 with open("data/ok/ok_user_train.csv") as f:
     df = pd.read_csv(f)
