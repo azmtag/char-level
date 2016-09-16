@@ -74,7 +74,7 @@ initial = datetime.datetime.now()
 models = []
 
 if args.model == "logreg" or args.model == "all":
-    models.append(LogisticRegression(C=0.8, n_jobs=2))
+    models.append(LogisticRegression(C=0.8))
 
 if args.model == "svm" or args.model == "all":
     models.append(SVC(C=0.8))
@@ -102,11 +102,15 @@ X_test = vectorizer.transform(x_test)
 y_test = y_test
 
 for model in models:
-    model.fit(X_train, y_train)
+    print()
+    print(model)
+    print()
     try:
-        my_print("Accuracy: " + str(model.score(X_test, y_test)) + " " + str(model))
+        model.fit(X_train, y_train)
+        my_print("Accuracy: " + str(model.score(X_test, y_test)))
     except:
-        my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)) + " " + str(model))
+        model.fit(X_train.toarray(), y_train)
+        my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)))
 
 with open(args.model + "_classifier_" + args.pref + ".pkl", "wb") as fid:
     cPickle.dump(models, fid)

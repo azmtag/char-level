@@ -105,16 +105,19 @@ my_print("Vectorization done. Training...")
 
 for model in models:
 
-    model.fit(X_train, y_train)
+    print()
     my_print(str(model))
+    print()
 
     try:
+        model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         my_print("Native score: " + str(model.score(X_test, y_test)))
         my_print("MAE: " + str(metrics.mean_absolute_error(y_pred, y_test)))
         my_print("MSE: " + str(metrics.mean_squared_error(y_pred, y_test)))
         my_print("R2: " + str(metrics.r2_score(y_pred, y_test)))
     except:
+        model.fit(X_train.toarray(), y_train)
         y_pred = model.predict(X_test.toarray())
         my_print("MAE: " + str(metrics.mean_absolute_error(model.predict(X_test.toarray()), y_test)))
         my_print("MSE: " + str(metrics.mean_squared_error(model.predict(X_test.toarray()), y_test)))
