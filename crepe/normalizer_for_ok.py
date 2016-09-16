@@ -31,40 +31,37 @@ def normalize_text(s, use_denumberization=False):
         return s
 
 
-with open("data/ok/ok_user_train.csv") as f:
-    df = pd.read_csv(f)
-    print("Data read", f)
-    # df.ix[:, 4] = df.ix[:, 4].map(lambda x: normalize_text((x))) #.decode("utf-8"))))
+def collect(df):
     line_len = len(list(df.ix[:, 4]))
     i = 0
     collector = []
-
     for line in list(df.ix[:, 4]):
         collector.append(normalize_text(line))
         if i % 100 == 0:
             print(i, "/", line_len)
         i += 1
+    return collector
 
-    df.ix[:, 4] = collector
-
+with open("data/ok/ok_user_train.csv") as f:
+    df = pd.read_csv(f)
+    print("Data read", f)
+    df.ix[:, 4] = collect(df)
     df.to_csv("data/ok/ok_user_train_normalized.csv")
-
-quit()
 
 with open("data/ok/ok_user_test.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
-    df.ix[:, 4] = df.ix[:, 4].map(lambda x: normalize_text((x)))  # .decode("utf-8"))))
+    df.ix[:, 4] = collect(df)
     df.to_csv("data/ok/ok_user_test_normalized.csv")
 
 with open("data/ok/ok_train.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
-    df.ix[:, 4] = df.ix[:, 4].map(lambda x: normalize_text((x)))  # .decode("utf-8"))))
+    df.ix[:, 4] = collect(df)
     df.to_csv("data/ok/ok_train_normalized.csv")
 
 with open("data/ok/ok_test.csv") as f:
     df = pd.read_csv(f)
     print("Data read", f)
-    df.ix[:, 4] = df.ix[:, 4].map(lambda x: normalize_text((x)))  # .decode("utf-8"))))
+    df.ix[:, 4] = collect(df)
     df.to_csv("data/ok/ok_test_normalized.csv")
