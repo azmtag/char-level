@@ -76,7 +76,7 @@ initial = datetime.datetime.now()
 models = []
 
 if args.model == "logreg" or args.model == "all":
-    models.append(LogisticRegression(C=0.8, n_jobs=3))
+    models.append(LogisticRegression(C=0.8, n_jobs=6))
 
 if args.model == "svm" or args.model == "all":
     models.append(SVC(C=0.8))
