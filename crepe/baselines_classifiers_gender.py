@@ -41,7 +41,9 @@ parser.add_argument('--syns', action="store_true",
 parser.add_argument('--pref', type=str, default="gender",
                     help='default=None (do not save); prefix for saving models')
 
-parser.add_argument('--add_pycrepe', type=bool, default=True)
+parser.add_argument('--usepycrepe', type=bool,
+                    default=False,
+                    help="defaul=False, using crepe features")
 
 args = parser.parse_args()
 
