@@ -90,7 +90,7 @@ if args.model not in ["linreg", "all", "rf", "gbt", "extratrees"]:
 my_print("Normalization done. Vectorization...")
 
 # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-vectorizer = TfidfVectorizer(min_df=1, ngram_range=(1, 2), max_df=0.9)
+vectorizer = TfidfVectorizer(min_df=10, ngram_range=(1, 2), max_df=0.7)
 vectorizer.fit(xt)
 
 X_train = vectorizer.transform(xt)
@@ -123,6 +123,6 @@ for model in models:
         my_print("MSE: " + str(metrics.mean_squared_error(model.predict(X_test.toarray()), y_test)))
         my_print("R2: " + str(metrics.r2_score(y_pred, y_test)))
 
-with open(args.model + "_regr_" + args.pref + ".pkl", "wb") as fid:
+with open(args.model + "_regr_" + args.dataset + "_" + args.pref + ".pkl", "wb") as fid:
     pickle.dump(models, fid)
     pickle.dump(vectorizer, fid)

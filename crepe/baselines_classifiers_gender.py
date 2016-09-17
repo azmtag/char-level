@@ -89,7 +89,7 @@ if args.model not in ["svm", "all", "logreg", "gbt"]:
 print("Training...")
 
 # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-vectorizer = TfidfVectorizer(min_df=1, ngram_range=(1, 2), max_df=0.9)
+vectorizer = TfidfVectorizer(min_df=10, ngram_range=(1, 2), max_df=0.7)
 vectorizer.fit(xt)
 
 # vectorizing
@@ -112,6 +112,6 @@ for model in models:
         model.fit(X_train.toarray(), y_train)
         my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)))
 
-with open(args.model + "_classifier_" + args.pref + ".pkl", "wb") as fid:
+with open(args.model + "_classifier_" + args.dataset + "_" + args.pref + ".pkl", "wb") as fid:
     pickle.dump(models, fid)
     pickle.dump(vectorizer, fid)
