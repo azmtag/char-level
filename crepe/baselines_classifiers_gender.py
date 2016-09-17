@@ -115,6 +115,8 @@ my_print("X_train, y_train shapes: " + str(X_train.shape) + " " + str(y_train.sh
 X_test = vectorizer.transform(x_test)
 y_test = y_test
 
+my_print("X_test, y_test shapes: " + str(X_test.shape) + " " + str(y_test.shape))
+
 if args.usepycrepe:
 
     np.random.seed(42)

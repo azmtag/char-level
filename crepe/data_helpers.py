@@ -1,6 +1,6 @@
 # coding=utf-8
 import string
-
+import scipy.sparse as spsp
 import numpy as np
 import pandas as pd
 
@@ -59,7 +59,7 @@ def read_features_file(fname, target_index=0, select_idx=None, normalize=True,
                     x_list.append(features)
                     y_list.append(label)
 
-        x = np.matrix(x_list)
+        x = spsp.dok_matrix(x_list)
         y = np.array(y_list)
 
     return x, y
