@@ -87,10 +87,10 @@ if args.model not in ["linreg", "all", "rf", "gbt", "extratrees"]:
     my_print("NO SUCH MODEL: " + args.model)
     raise
 
-my_print("Normalization done. Vectorization...")
+my_print(" Vectorization...")
 
 # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-vectorizer = TfidfVectorizer(min_df=10, ngram_range=(1, 2), max_df=0.7)
+vectorizer = TfidfVectorizer(min_df=30, ngram_range=(1, 2), max_df=0.7)
 vectorizer.fit(xt)
 
 X_train = vectorizer.transform(xt)

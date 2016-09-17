@@ -89,7 +89,7 @@ if args.model not in ["svm", "all", "logreg", "gbt"]:
 print("Training...")
 
 # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-vectorizer = TfidfVectorizer(min_df=10, ngram_range=(1, 2), max_df=0.7)
+vectorizer = TfidfVectorizer(min_df=30, ngram_range=(1, 2), max_df=0.7)
 vectorizer.fit(xt)
 
 # vectorizing
