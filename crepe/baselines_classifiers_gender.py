@@ -94,7 +94,7 @@ try:
 except Exception as e:
     print(e)
     # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-    vectorizer = TfidfVectorizer(min_df=40, ngram_range=(1, 2), max_df=0.6)
+    vectorizer = TfidfVectorizer(min_df=40, ngram_range=(1, 2), max_df=0.4)
     vectorizer.fit(xt)
 
     with open("vectorizer.bin", "wb") as vbin:

@@ -8,16 +8,15 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse as ap
-import pickle
 import datetime
+import pickle
 
+import data_helpers
 from sklearn import metrics
 from sklearn.ensemble.forest import ExtraTreesRegressor, RandomForestRegressor
 from sklearn.ensemble.gradient_boosting import GradientBoostingRegressor
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model.base import LinearRegression
-
-import data_helpers
 
 
 def my_print(s):
@@ -90,15 +89,15 @@ if args.model not in ["linreg", "all", "rf", "gbt", "extratrees"]:
 my_print(" Vectorization...")
 
 try:
-    with open("vectorizer.bin", "rb") as inp:
+    with open(args.dataset + "_vectorizer.bin", "rb") as inp:
         vectorizer = pickle.load(inp)
 except Exception as e:
     print(e)
     # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-    vectorizer = TfidfVectorizer(min_df=40, ngram_range=(1, 2), max_df=0.6)
+    vectorizer = TfidfVectorizer(min_df=40, ngram_range=(1, 2), max_df=0.4)
     vectorizer.fit(xt)
 
-    with open("vectorizer.bin", "wb") as vbin:
+    with open(args.dataset + "_vectorizer.bin", "wb") as vbin:
         pickle.dump(vectorizer, vbin)
 
 X_train = vectorizer.transform(xt)
