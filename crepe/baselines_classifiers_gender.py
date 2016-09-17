@@ -8,7 +8,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse as ap
-import cPickle
+import pickle
 import datetime
 import re
 
@@ -113,5 +113,5 @@ for model in models:
         my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)))
 
 with open(args.model + "_classifier_" + args.pref + ".pkl", "wb") as fid:
-    cPickle.dump(models, fid)
-    cPickle.dump(vectorizer, fid)
+    pickle.dump(models, fid)
+    pickle.dump(vectorizer, fid)
