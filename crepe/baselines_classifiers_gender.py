@@ -132,6 +132,9 @@ if args.add_pycrepe:
 
     print("Updated shapes", X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
+    if X_train.shape[0] != pc_train_x.shape[0]:
+        raise Exception("Different shaoes " + str(X_train.shape) + " " + str(pc_train_x.shape))
+
     X_train = np.hstack([X_train, pc_train_x])
     X_test = np.hstack([X_test, pc_test_x])
 
