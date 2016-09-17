@@ -118,6 +118,7 @@ y_test = y_test
 my_print("X_test, y_test shapes: " + str(X_test.shape) + " " + str(y_test.shape))
 
 if args.usepycrepe:
+    # склеиваем с фичами pycrepe
 
     np.random.seed(42)
 
