@@ -115,7 +115,7 @@ my_print("X_train, y_train shapes: " + str(X_train.shape) + " " + str(y_train.sh
 X_test = vectorizer.transform(x_test)
 y_test = y_test
 
-if args.add_pycrepe:
+if args.usepycrepe:
     np.random.seed(42)
     train_idx = np.random.choice(X_train.shape[0], X_train.shape[0] // 5)
     train_idx.sort()
