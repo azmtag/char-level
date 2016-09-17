@@ -94,7 +94,7 @@ try:
 except Exception as e:
     print(e)
     # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-    vectorizer = TfidfVectorizer(min_df=30, ngram_range=(1, 2), max_df=0.7)
+    vectorizer = TfidfVectorizer(min_df=40, ngram_range=(1, 2), max_df=0.6)
     vectorizer.fit(xt)
 
     with open("vectorizer.bin", "wb") as vbin:
@@ -119,10 +119,12 @@ for model in models:
             of.write("Accuracy: " + str(model.score(X_test, y_test)))
         my_print("Accuracy: " + str(model.score(X_test, y_test)))
     except:
-        model.fit(X_train.toarray(), y_train)
+        X_train = X_train.toarray()
+        X_test = X_test.toarray()
+        model.fit(X_train, y_train)
         with open(args.model + "_classifier_" + args.dataset + "_" + args.pref + ".txt", "w") as of:
             of.write("Accuracy: " + str(model.score(X_test, y_test)))
-        my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)))
+        my_print("Accuracy: " + str(model.score(X_test, y_test)))
 
 with open(args.model + "_classifier_" + args.dataset + "_" + args.pref + ".pkl", "wb") as fid:
     pickle.dump(models, fid)
