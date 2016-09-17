@@ -115,12 +115,12 @@ for model in models:
     print()
     try:
         model.fit(X_train, y_train)
-        with open(args.model + "_classifier_" + args.dataset + "_" + args.pref + ".txt", "r") as of:
+        with open(args.model + "_classifier_" + args.dataset + "_" + args.pref + ".txt", "w") as of:
             of.write("Accuracy: " + str(model.score(X_test, y_test)))
         my_print("Accuracy: " + str(model.score(X_test, y_test)))
     except:
         model.fit(X_train.toarray(), y_train)
-        with open(args.model + "_classifier_" + args.dataset + "_" + args.pref + ".txt", "r") as of:
+        with open(args.model + "_classifier_" + args.dataset + "_" + args.pref + ".txt", "w") as of:
             of.write("Accuracy: " + str(model.score(X_test, y_test)))
         my_print("Accuracy: " + str(model.score(X_test.toarray(), y_test)))
 

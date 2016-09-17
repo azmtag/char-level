@@ -121,7 +121,7 @@ for model in models:
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
 
-        with open(args.model + "_regr_" + args.dataset + "_" + args.pref + ".txt", "r") as of:
+        with open(args.model + "_regr_" + args.dataset + "_" + args.pref + ".txt", "w") as of:
             of.write("Native score: " + str(model.score(X_test, y_test)) + "\n")
             of.write("MAE: " + str(metrics.mean_absolute_error(y_pred, y_test)) + "\n")
             of.write("MSE: " + str(metrics.mean_squared_error(y_pred, y_test)) + "\n")
@@ -135,7 +135,7 @@ for model in models:
         model.fit(X_train.toarray(), y_train)
         y_pred = model.predict(X_test.toarray())
 
-        with open(args.model + "_regr_" + args.dataset + "_" + args.pref + ".txt", "r") as of:
+        with open(args.model + "_regr_" + args.dataset + "_" + args.pref + ".txt", "w") as of:
             of.write("Native score: " + str(model.score(X_test, y_test)) + "\n")
             of.write("MAE: " + str(metrics.mean_absolute_error(y_pred, y_test)) + "\n")
             of.write("MSE: " + str(metrics.mean_squared_error(y_pred, y_test)) + "\n")
