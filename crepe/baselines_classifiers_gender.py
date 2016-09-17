@@ -27,7 +27,7 @@ parser = ap.ArgumentParser(description='our baselines')
 
 parser.add_argument('--dataset', type=str,
                     choices=['restoclub', 'okstatus', 'okuser'],
-                    default='okstatus',
+                    default='okuser',
                     help='default=okstatus, choose dataset')
 
 parser.add_argument('--model', type=str,
@@ -42,7 +42,7 @@ parser.add_argument('--pref', type=str, default="gender",
                     help='default=None (do not save); prefix for saving models')
 
 parser.add_argument('--usepycrepe', type=bool,
-                    default=False,
+                    default=True,
                     help="defaul=False, using crepe features")
 
 args = parser.parse_args()
@@ -116,11 +116,21 @@ X_test = vectorizer.transform(x_test)
 y_test = y_test
 
 if args.usepycrepe:
+
     np.random.seed(42)
-    train_idx = np.random.choice(X_train.shape[0], X_train.shape[0] // 5)
+
+    # http://stackoverflow.com/a/8505754
+    train_idx = np.arange(X_train.shape[0])
+    np.random.shuffle(train_idx)
+    train_idx = train_idx[:X_train.shape[0] // 5]
     train_idx.sort()
-    test_idx = np.random.choice(X_test.shape[0], X_test.shape[0] // 3)
+
+    test_idx = np.arange(X_test.shape[0])
+    np.random.shuffle(test_idx)
+    test_idx = test_idx[:X_test.shape[0] // 5]
     test_idx.sort()
+
+    print("idx ", train_idx.shape, test_idx.shape)
 
     (pc_train_x, pc_train_y), (pc_test_x, pc_test_y) = \
         data_helpers.load_pycrepe_features_ok_user_gender(train_idx, test_idx)
@@ -135,10 +145,10 @@ if args.usepycrepe:
     print("Updated shapes", X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
     if X_train.shape[0] != pc_train_x.shape[0]:
-        raise Exception("Different shaoes " + str(X_train.shape) + " " + str(pc_train_x.shape))
+        raise Exception("Different shapes " + str(X_train.shape) + " " + str(pc_train_x.shape))
 
-    X_train = np.hstack([X_train, pc_train_x])
-    X_test = np.hstack([X_test, pc_test_x])
+    X_train = np.vstack([X_train, pc_train_x])
+    X_test = np.vstack([X_test, pc_test_x])
 
     print("Updated after concat shapes", X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
