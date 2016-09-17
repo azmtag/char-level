@@ -39,7 +39,7 @@ parser.add_argument('--model', type=str,
 parser.add_argument('--syns', action="store_true",
                     help='default=False; use synonyms')
 
-parser.add_argument('--pref', type=str, default="default",
+parser.add_argument('--pref', type=str, default="age",
                     help='default=default; prefix for saving models')
 
 args = parser.parse_args()
@@ -81,7 +81,7 @@ if args.model == "rf" or args.model == "all":
     models.append(RandomForestRegressor(n_estimators=100, min_samples_leaf=2, n_jobs=3))
 
 if args.model == "gbt" or args.model == "all":
-    models.append(GradientBoostingRegressor(n_estimators=150, max_depth=15))
+    models.append(GradientBoostingRegressor(n_estimators=150))
 
 if args.model not in ["linreg", "all", "rf", "gbt", "extratrees"]:
     my_print("NO SUCH MODEL: " + args.model)
@@ -89,9 +89,17 @@ if args.model not in ["linreg", "all", "rf", "gbt", "extratrees"]:
 
 my_print(" Vectorization...")
 
-# vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-vectorizer = TfidfVectorizer(min_df=30, ngram_range=(1, 2), max_df=0.7)
-vectorizer.fit(xt)
+try:
+    with open("vectorizer.bin", "rb") as inp:
+        vectorizer = pickle.load(inp)
+except Exception as e:
+    print(e)
+    # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
+    vectorizer = TfidfVectorizer(min_df=30, ngram_range=(1, 2), max_df=0.7)
+    vectorizer.fit(xt)
+
+    with open("vectorizer.bin", "wb") as vbin:
+        pickle.dump(vectorizer, vbin)
 
 X_train = vectorizer.transform(xt)
 y_train = yt

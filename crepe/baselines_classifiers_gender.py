@@ -40,7 +40,7 @@ parser.add_argument('--model', type=str,
 parser.add_argument('--syns', action="store_true",
                     help='default=False; use synonyms')
 
-parser.add_argument('--pref', type=str, default="default",
+parser.add_argument('--pref', type=str, default="gender",
                     help='default=None (do not save); prefix for saving models')
 
 args = parser.parse_args()
@@ -80,17 +80,25 @@ if args.model == "svm" or args.model == "all":
     models.append(SVC(C=0.8))
 
 if args.model == "gbt" or args.model == "all":
-    models.append(GradientBoostingClassifier(n_estimators=150, max_depth=15))
+    models.append(GradientBoostingClassifier(n_estimators=150))
 
 if args.model not in ["svm", "all", "logreg", "gbt"]:
     my_print("NO SUCH MODEL: " + args.model)
     raise
 
-print("Training...")
+print("Vectorizing...")
 
-# vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
-vectorizer = TfidfVectorizer(min_df=30, ngram_range=(1, 2), max_df=0.7)
-vectorizer.fit(xt)
+try:
+    with open("vectorizer.bin", "rb") as inp:
+        vectorizer = pickle.load(inp)
+except Exception as e:
+    print(e)
+    # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
+    vectorizer = TfidfVectorizer(min_df=30, ngram_range=(1, 2), max_df=0.7)
+    vectorizer.fit(xt)
+
+    with open("vectorizer.bin", "wb") as vbin:
+        pickle.dump(vectorizer, vbin)
 
 # vectorizing
 X_train = vectorizer.transform(xt)
