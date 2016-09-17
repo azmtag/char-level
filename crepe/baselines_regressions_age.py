@@ -120,6 +120,13 @@ for model in models:
     try:
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
+
+        with open(args.model + "_regr_" + args.dataset + "_" + args.pref + ".txt", "r") as of:
+            of.write("Native score: " + str(model.score(X_test, y_test)) + "\n")
+            of.write("MAE: " + str(metrics.mean_absolute_error(y_pred, y_test)) + "\n")
+            of.write("MSE: " + str(metrics.mean_squared_error(y_pred, y_test)) + "\n")
+            of.write("R2: " + str(metrics.r2_score(y_pred, y_test)) + "\n")
+
         my_print("Native score: " + str(model.score(X_test, y_test)))
         my_print("MAE: " + str(metrics.mean_absolute_error(y_pred, y_test)))
         my_print("MSE: " + str(metrics.mean_squared_error(y_pred, y_test)))
@@ -127,6 +134,13 @@ for model in models:
     except:
         model.fit(X_train.toarray(), y_train)
         y_pred = model.predict(X_test.toarray())
+
+        with open(args.model + "_regr_" + args.dataset + "_" + args.pref + ".txt", "r") as of:
+            of.write("Native score: " + str(model.score(X_test, y_test)) + "\n")
+            of.write("MAE: " + str(metrics.mean_absolute_error(y_pred, y_test)) + "\n")
+            of.write("MSE: " + str(metrics.mean_squared_error(y_pred, y_test)) + "\n")
+            of.write("R2: " + str(metrics.r2_score(y_pred, y_test)) + "\n")
+
         my_print("MAE: " + str(metrics.mean_absolute_error(model.predict(X_test.toarray()), y_test)))
         my_print("MSE: " + str(metrics.mean_squared_error(model.predict(X_test.toarray()), y_test)))
         my_print("R2: " + str(metrics.r2_score(y_pred, y_test)))
