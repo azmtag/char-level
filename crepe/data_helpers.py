@@ -51,14 +51,14 @@ def load_ok_user_data_gender_normalized():
 
 
 def load_ok_data_age_normalized():
-    train_data = read_data_file('data/ok/ok_train_normalized.csv', target_index=1, binary=True)
-    test_data = read_data_file('data/ok/ok_test_normalized.csv', target_index=1, binary=True)
+    train_data = read_data_file('data/ok/ok_train_normalized.csv', target_index=1, binary=False)
+    test_data = read_data_file('data/ok/ok_test_normalized.csv', target_index=1, binary=False)
     return train_data, test_data
 
 
 def load_ok_user_data_age_normalized():
-    train_data = read_data_file('data/ok/ok_user_train_normalized.csv', target_index=1, binary=True)
-    test_data = read_data_file('data/ok/ok_user_test_normalized.csv', target_index=1, binary=True)
+    train_data = read_data_file('data/ok/ok_user_train_normalized.csv', target_index=1, binary=False)
+    test_data = read_data_file('data/ok/ok_user_test_normalized.csv', target_index=1, binary=False)
     return train_data, test_data
 
 
@@ -77,14 +77,14 @@ def load_ok_user_data_gender():
 
 
 def load_ok_data_age():
-    train_data = read_data_file('data/ok/ok_train.csv', target_index=1, binary=True)
-    test_data = read_data_file('data/ok/ok_test.csv', target_index=1, binary=True)
+    train_data = read_data_file('data/ok/ok_train.csv', target_index=1, binary=False)
+    test_data = read_data_file('data/ok/ok_test.csv', target_index=1, binary=False)
     return train_data, test_data
 
 
 def load_ok_user_data_age():
-    train_data = read_data_file('data/ok/ok_user_train.csv', target_index=1, binary=True)
-    test_data = read_data_file('data/ok/ok_user_test.csv', target_index=1, binary=True)
+    train_data = read_data_file('data/ok/ok_user_train.csv', target_index=1, binary=False)
+    test_data = read_data_file('data/ok/ok_user_test.csv', target_index=1, binary=False)
     return train_data, test_data
 
 
