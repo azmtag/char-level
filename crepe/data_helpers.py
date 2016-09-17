@@ -5,27 +5,61 @@ import numpy as np
 import pandas as pd
 
 
-def read_features_file(fname, target_index=0, normalize=True, binary=False, meaningful_start=3):
-    content = pd.read_csv(fname, header=None, index_col=False)
-    content.dropna(inplace=True)
-    content.reset_index(inplace=True, drop=True)
+def read_features_file(fname, target_index=0, select_idx=None, normalize=True,
+                       binary=False, meaningful_start=3):
+    if select_idx is None:
 
-    x = content.ix[:, meaningful_start:]
-    x = np.array(x)
+        content = pd.read_csv(fname, header=None, index_col=False)
+        content.dropna(inplace=True)
+        content.reset_index(inplace=True, drop=True)
 
-    # y = content[0] - 1
-    # y = to_categorical(y)
+        x = content.ix[:, meaningful_start:]
+        x = np.array(x)
 
-    y = content.ix[:, target_index].values
+        # y = content[0] - 1
+        # y = to_categorical(y)
 
-    if normalize:
-        max_y = np.max(np.abs(y))
-        y = y / max_y
-    if binary:
-        vals = list(set(y))
-        if len(vals) > 2:
-            raise Exception("Binary input data is not binary! Dataset %s, target_index=%d" % (fname, target_index))
-        y = np.array([0 if a == vals[0] else 1 for a in y])
+        y = content.ix[:, target_index].values
+
+        if normalize:
+            max_y = np.max(np.abs(y))
+            y = y / max_y
+        if binary:
+            vals = list(set(y))
+            if len(vals) > 2:
+                raise Exception("Binary input data is not binary! Dataset %s, target_index=%d" % (fname, target_index))
+            y = np.array([0 if a == vals[0] else 1 for a in y])
+    else:
+
+        label_met = None
+        select_idx = set(select_idx)
+        y_list = []
+        x_list = []
+
+        with open(fname, "r") as inp:
+
+            for idx, line in enumerate(inp):
+
+                if idx in select_idx:
+
+                    splitted = line.split(",")
+                    label = int(splitted[target_index])
+
+                    if label_met is None:
+                        label_met = label
+
+                    if binary and label == label_met:
+                        label = 0
+                    else:
+                        label = 1
+
+                    features = np.array(map(lambda xx: float(xx), splitted[meaningful_start:]))
+
+                    x_list.append(features)
+                    y_list.append(label)
+
+        x = np.array(x_list)
+        y = np.array(y_list)
 
     return x, y
 
@@ -113,19 +147,23 @@ def load_ok_user_data_age():
     return train_data, test_data
 
 
-def load_pycrepe_features_ok_user_gender():
+def load_pycrepe_features_ok_user_gender(select_train, select_test):
     train_data = read_features_file('data/ok/ok_user_train_pycrepe.csv',
-                                    target_index=2, binary=True, meaningful_start=4)
+                                    target_index=2, binary=True, meaningful_start=4,
+                                    select_idx=select_train)
     test_data = read_features_file('data/ok/ok_user_test_pycrepe.csv',
-                                    target_index=2, binary=True, meaningful_start=4)
+                                   target_index=2, binary=True, meaningful_start=4,
+                                   select_idx=select_test)
     return train_data, test_data
 
 
-def load_pycrepe_features_ok_user_age():
+def load_pycrepe_features_ok_user_age(select_train, select_test):
     train_data = read_features_file('data/ok/ok_user_train_pycrepe.csv',
-                                    target_index=1, binary=False, meaningful_start=4)
+                                    target_index=1, binary=False, meaningful_start=4,
+                                    select_idx=select_train)
     test_data = read_features_file('data/ok/ok_user_test_pycrepe.csv',
-                                    target_index=1, binary=False, meaningful_start=4)
+                                   target_index=1, binary=False, meaningful_start=4,
+                                   select_idx=select_test)
     return train_data, test_data
 
 

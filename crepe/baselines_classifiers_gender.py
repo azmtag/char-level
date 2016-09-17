@@ -7,20 +7,16 @@
 from __future__ import division
 from __future__ import print_function
 
-import pandas as pd
 import argparse as ap
-import pickle
 import datetime
-import re
+import pickle
 
-import pymystem3 as ms
-from sklearn.ensemble.forest import RandomForestClassifier
+import data_helpers
+import numpy as np
 from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model.logistic import LogisticRegression
 from sklearn.svm.classes import SVC
-
-import data_helpers
 
 
 def my_print(s):
@@ -45,7 +41,7 @@ parser.add_argument('--syns', action="store_true",
 parser.add_argument('--pref', type=str, default="gender",
                     help='default=None (do not save); prefix for saving models')
 
-parser.add_argument('--add_pycrepe', type=bool, default=False)
+parser.add_argument('--add_pycrepe', type=bool, default=True)
 
 args = parser.parse_args()
 
@@ -118,7 +114,28 @@ X_test = vectorizer.transform(x_test)
 y_test = y_test
 
 if args.add_pycrepe:
-    pc_train, pc_test = data_helpers.load_pycrepe_features_ok_user_gender()
+    np.random.seed(42)
+    train_idx = np.random.choice(X_train.shape[0], X_train.shape[0] // 5)
+    train_idx.sort()
+    test_idx = np.random.choice(X_test.shape[0], X_test.shape[0] // 3)
+    test_idx.sort()
+
+    (pc_train_x, pc_train_y), (pc_test_x, pc_test_y) = \
+        data_helpers.load_pycrepe_features_ok_user_gender(train_idx, test_idx)
+
+    print("Selection shapes", pc_train_x.shape, pc_train_y.shape, pc_test_x.shape, pc_test_y.shape)
+
+    X_train = X_train[train_idx, :]
+    y_train = y_train[train_idx]
+    X_test = X_test[test_idx, :]
+    y_test = y_test[test_idx]
+
+    print("Updated shapes", X_train.shape, y_train.shape, X_test.shape, y_test.shape)
+
+    X_train = np.hstack([X_train, pc_train_x])
+    X_test = np.hstack([X_test, pc_test_x])
+
+    print("Updated after concat shapes", X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
 for model in models:
     print()
