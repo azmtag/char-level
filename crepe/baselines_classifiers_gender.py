@@ -7,12 +7,14 @@
 from __future__ import division
 from __future__ import print_function
 
+import pandas as pd
 import argparse as ap
 import pickle
 import datetime
 import re
 
 import pymystem3 as ms
+from sklearn.ensemble.forest import RandomForestClassifier
 from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model.logistic import LogisticRegression
@@ -42,6 +44,8 @@ parser.add_argument('--syns', action="store_true",
 
 parser.add_argument('--pref', type=str, default="gender",
                     help='default=None (do not save); prefix for saving models')
+
+parser.add_argument('--add_pycrepe', type=bool, default=False)
 
 args = parser.parse_args()
 
@@ -82,6 +86,9 @@ if args.model == "svm" or args.model == "all":
 if args.model == "gbt" or args.model == "all":
     models.append(GradientBoostingClassifier(n_estimators=150))
 
+# if args.model == "rf" or args.model == "all":
+#     models.append(RandomForestClassifier(n_estimators=100, min_samples_leaf=2, n_jobs=3))
+
 if args.model not in ["svm", "all", "logreg", "gbt"]:
     my_print("NO SUCH MODEL: " + args.model)
     raise
@@ -109,6 +116,9 @@ my_print("X_train, y_train shapes: " + str(X_train.shape) + " " + str(y_train.sh
 
 X_test = vectorizer.transform(x_test)
 y_test = y_test
+
+if args.add_pycrepe:
+    pc_train, pc_test = data_helpers.load_pycrepe_features_ok_user_gender()
 
 for model in models:
     print()
