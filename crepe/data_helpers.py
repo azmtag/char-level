@@ -34,8 +34,6 @@ def read_features_file(fname, target_index=0, select_idx=None, normalize=True,
         label_met = None
         select_idx = set(select_idx)
 
-        print("skect idx size", len(select_idx))
-
         y_list = []
         x_list = []
 
@@ -56,12 +54,12 @@ def read_features_file(fname, target_index=0, select_idx=None, normalize=True,
                     else:
                         label = 1
 
-                    features = np.array(list(map(lambda xx: float(xx), splitted[meaningful_start:])))
+                    features = list(map(lambda xx: float(xx), splitted[meaningful_start:]))
 
                     x_list.append(features)
                     y_list.append(label)
 
-        x = np.array(x_list)
+        x = np.matrix(x_list)
         y = np.array(y_list)
 
     return x, y

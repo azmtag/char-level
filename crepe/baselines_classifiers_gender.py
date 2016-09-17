@@ -6,11 +6,11 @@
 
 from __future__ import division
 from __future__ import print_function
-
+from scipy import sparse
 import argparse as ap
 import datetime
 import pickle
-
+import scipy as sp
 import data_helpers
 import numpy as np
 from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier
@@ -147,8 +147,8 @@ if args.usepycrepe:
     if X_train.shape[0] != pc_train_x.shape[0]:
         raise Exception("Different shapes " + str(X_train.shape) + " " + str(pc_train_x.shape))
 
-    X_train = np.vstack([X_train, pc_train_x])
-    X_test = np.vstack([X_test, pc_test_x])
+    X_train = sp.sparse.hstack([X_train, pc_train_x])
+    X_test = sp.sparse.hstack([X_test, pc_test_x])
 
     print("Updated after concat shapes", X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
