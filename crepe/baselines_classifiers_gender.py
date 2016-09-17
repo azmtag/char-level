@@ -95,7 +95,7 @@ except Exception as e:
     print(e)
     # vectorizer = CountVectorizer(min_df=2, ngram_range=(1, 2), max_df=0.9)
     vectorizer = TfidfVectorizer(min_df=100, ngram_range=(1, 2), max_df=0.3,
-                                 token_pattern=r"(?u)\b[А-Яа-я0-9][А-Яа-я0-9]+\b")
+                                 token_pattern=r"(?u)\b[А-Яа-я0-9][А-Яа-я0-9]+\b", max_features=40000)
     vectorizer.fit(xt)
 
     with open(args.dataset + "_vectorizer.bin", "wb") as vbin:
