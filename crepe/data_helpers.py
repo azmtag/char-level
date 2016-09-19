@@ -1,8 +1,68 @@
 # coding=utf-8
 import string
+import scipy.sparse as spsp
 import numpy as np
 import pandas as pd
-from keras.utils.np_utils import to_categorical, normalize
+
+
+def read_features_file(fname, target_index=0, select_idx=None, normalize=True,
+                       binary=False, meaningful_start=3):
+    if select_idx is None:
+
+        content = pd.read_csv(fname, header=None, index_col=False)
+        content.dropna(inplace=True)
+        content.reset_index(inplace=True, drop=True)
+
+        x = content.ix[:, meaningful_start:]
+        x = np.array(x)
+
+        # y = content[0] - 1
+        # y = to_categorical(y)
+
+        y = content.ix[:, target_index].values
+
+        if normalize:
+            max_y = np.max(np.abs(y))
+            y = y / max_y
+        if binary:
+            vals = list(set(y))
+            if len(vals) > 2:
+                raise Exception("Binary input data is not binary! Dataset %s, target_index=%d" % (fname, target_index))
+            y = np.array([0 if a == vals[0] else 1 for a in y])
+    else:
+
+        label_met = None
+        select_idx = set(select_idx)
+
+        y_list = []
+        x_list = []
+
+        with open(fname, "r") as inp:
+
+            for idx, line in enumerate(inp):
+
+                if idx in select_idx:
+
+                    splitted = line.split(",")
+                    label = int(splitted[target_index])
+
+                    if label_met is None:
+                        label_met = label
+
+                    if binary and label == label_met:
+                        label = 0
+                    else:
+                        label = 1
+
+                    features = list(map(lambda xx: float(xx), splitted[meaningful_start:]))
+
+                    x_list.append(features)
+                    y_list.append(label)
+
+        x = spsp.dok_matrix(x_list)
+        y = np.array(y_list)
+
+    return x, y
 
 
 def read_data_file(fname, target_index=0, normalize=True, binary=False):
@@ -10,7 +70,7 @@ def read_data_file(fname, target_index=0, normalize=True, binary=False):
     content.dropna(inplace=True)
     content.reset_index(inplace=True, drop=True)
 
-    x = content.ix[:, content.shape[1]-1]
+    x = content.ix[:, content.shape[1] - 1]
     x = np.array(x)
 
     # y = content[0] - 1
@@ -23,8 +83,8 @@ def read_data_file(fname, target_index=0, normalize=True, binary=False):
     if binary:
         vals = list(set(y))
         if len(vals) > 2:
-            raise Exception("Binary input data is not binary! Dataset %s, target_index=%d" % (fname, target_index) )
-        y = np.array([ 0 if a == vals[0] else 1 for a in y ])
+            raise Exception("Binary input data is not binary! Dataset %s, target_index=%d" % (fname, target_index))
+        y = np.array([0 if a == vals[0] else 1 for a in y])
 
     return x, y
 
@@ -33,6 +93,32 @@ def load_restoclub_data():
     train_data = read_data_file('train.csv')
     test_data = read_data_file('test.csv')
 
+    return train_data, test_data
+
+
+def load_ok_data_gender_normalized():
+    train_data = read_data_file('data/ok/ok_train_normalized.csv', target_index=2, binary=True)
+    test_data = read_data_file('data/ok/ok_test_normalized.csv', target_index=2, binary=True)
+
+    return train_data, test_data
+
+
+def load_ok_user_data_gender_normalized():
+    train_data = read_data_file('data/ok/ok_user_train_normalized.csv', target_index=2, binary=True)
+    test_data = read_data_file('data/ok/ok_user_test_normalized.csv', target_index=2, binary=True)
+
+    return train_data, test_data
+
+
+def load_ok_data_age_normalized():
+    train_data = read_data_file('data/ok/ok_train_normalized.csv', target_index=1, binary=False)
+    test_data = read_data_file('data/ok/ok_test_normalized.csv', target_index=1, binary=False)
+    return train_data, test_data
+
+
+def load_ok_user_data_age_normalized():
+    train_data = read_data_file('data/ok/ok_user_train_normalized.csv', target_index=1, binary=False)
+    test_data = read_data_file('data/ok/ok_user_test_normalized.csv', target_index=1, binary=False)
     return train_data, test_data
 
 
@@ -47,6 +133,38 @@ def load_ok_user_data_gender():
     train_data = read_data_file('data/ok/ok_user_train.csv', target_index=2, binary=True)
     test_data = read_data_file('data/ok/ok_user_test.csv', target_index=2, binary=True)
 
+    return train_data, test_data
+
+
+def load_ok_data_age():
+    train_data = read_data_file('data/ok/ok_train.csv', target_index=1, binary=False)
+    test_data = read_data_file('data/ok/ok_test.csv', target_index=1, binary=False)
+    return train_data, test_data
+
+
+def load_ok_user_data_age():
+    train_data = read_data_file('data/ok/ok_user_train.csv', target_index=1, binary=False)
+    test_data = read_data_file('data/ok/ok_user_test.csv', target_index=1, binary=False)
+    return train_data, test_data
+
+
+def load_pycrepe_features_ok_user_gender(select_train, select_test):
+    train_data = read_features_file('data/ok/ok_user_train_pycrepe.csv',
+                                    target_index=2, binary=True, meaningful_start=4,
+                                    select_idx=select_train)
+    test_data = read_features_file('data/ok/ok_user_test_pycrepe.csv',
+                                   target_index=2, binary=True, meaningful_start=4,
+                                   select_idx=select_test)
+    return train_data, test_data
+
+
+def load_pycrepe_features_ok_user_age(select_train, select_test):
+    train_data = read_features_file('data/ok/ok_user_train_pycrepe.csv',
+                                    target_index=1, binary=False, meaningful_start=4,
+                                    select_idx=select_train)
+    test_data = read_features_file('data/ok/ok_user_test_pycrepe.csv',
+                                   target_index=1, binary=False, meaningful_start=4,
+                                   select_idx=select_test)
     return train_data, test_data
 
 
@@ -115,10 +233,11 @@ def create_vocab_set():
     # '-' characters. See https://github.com/zhangxiangxiao/Crepe#issues.
 
     alphabet = (
-    ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ', 'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
-     'ё', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю'] +
-    list(string.digits) +
-    list(string.punctuation) + ['\n'])
+        ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ', 'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж',
+         'э',
+         'ё', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю'] +
+        list(string.digits) +
+        list(string.punctuation) + ['\n'])
     # alphabet = (list(string.ascii_lowercase) + list(string.digits) +
     #             list(string.punctuation) + ['\n'])
     vocab_size = len(alphabet)
